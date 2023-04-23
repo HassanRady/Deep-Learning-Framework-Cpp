@@ -1,40 +1,31 @@
-//
-// Created by hassan on 22.04.23.
-//
 
-#ifndef CNN_IN_C___FULLYCONNECTED_H
-#define CNN_IN_C___FULLYCONNECTED_H
-
-#endif //CNN_IN_C___FULLYCONNECTED_H
 
 #include "Base.h"
 #include "Optimizer.h"
 
-#include "unsupported/Eigen/CXX11/Tensor"
 #include "iostream"
+#include <torch/torch.h>
+
 
 class Linear: public  BaseLayer{
 public: Linear(int inFeatures, int outFeatures) : inputSize(inFeatures), outputSize(outFeatures){
         trainable = true;
         initializable = true;
 
-        weights(inFeatures, outFeatures);
-        weights.setRandom();
-
-//        Eigen::Tensor<float, 1> bias(outFeatures);
-//        bias(inFeatures);
-//        bias.setConstant(1);
+        weights = torch::randn({inFeatures, outFeatures}, torch::kCUDA);
+        bias = torch::ones(inFeatures);
     }
 
-    Eigen::Tensor<float, 2> forward(const Eigen::Tensor<float, 2> & inputTensor) {
-        return inputTensor * weights;
+    torch::Tensor forward(const torch::Tensor & inputTensor) {
+        // return torch::multiply(inputTensor, weights);
+        return torch::matmul(inputTensor, weights);
 }
 
 private:
     int inputSize;
     int outputSize;
-    Eigen::Tensor<float, 2> weights;
-    Eigen::Tensor<float, 1> bias;
+    torch::Tensor weights;
+    torch::Tensor bias;
 public:
     Optimizer optimizer;
 };
