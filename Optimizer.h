@@ -2,12 +2,9 @@
 // Created by hassan on 22.04.23.
 //
 
-#ifndef CNN_IN_C___OPTIMIZER_H
-#define CNN_IN_C___OPTIMIZER_H
 
-#endif //CNN_IN_C___OPTIMIZER_H
+#include <torch/torch.h>
 
-#include "Eigen/Dense"
 
 class Optimizer {
 public: Optimizer() {}
@@ -21,7 +18,7 @@ class Sgd: public Optimizer{
 
 public: Sgd(double learningRate) : Optimizer(learningRate) {}
 
-Eigen::MatrixXd update(Eigen::MatrixXd & weightTensor, const Eigen::MatrixXd & gradientTensor) {
+torch::Tensor update(torch::Tensor & weightTensor, const torch::Tensor & gradientTensor) {
     weightTensor = weightTensor - learningRate * gradientTensor;
     return weightTensor;
 }
