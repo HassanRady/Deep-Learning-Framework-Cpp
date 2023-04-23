@@ -185,4 +185,6 @@ _deps
 .history
 .ionide
 
+Libraries/*
+build/*
 # End of https://www.toptal.com/developers/gitignore/api/clion,c++,cmake,visualstudiocode
