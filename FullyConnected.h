@@ -31,7 +31,7 @@ public: Linear(int inFeatures, int outFeatures) : inputSize(inFeatures), outputS
 torch::Tensor backward(torch::Tensor & errorTensor) {
     gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 
-    weights = optimizer.update(weights, gradientWeights);
+    weights = optimizer->update(weights, gradientWeights);
     
     auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inputSize)});
 
@@ -53,6 +53,6 @@ private:
     int batchSize;
 
 public:
-    Sgd optimizer;
+    Optimizer * optimizer;
 };
 
