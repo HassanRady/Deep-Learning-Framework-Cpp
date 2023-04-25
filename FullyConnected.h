@@ -6,6 +6,8 @@
 #include "iostream"
 #include <torch/torch.h>
 
+using namespace torch::indexing;
+
 
 class Linear: public  BaseLayer{
 public: Linear(int inFeatures, int outFeatures) : inputSize(inFeatures), outputSize(outFeatures){
@@ -17,11 +19,12 @@ public: Linear(int inFeatures, int outFeatures) : inputSize(inFeatures), outputS
     }
 
     torch::Tensor forward(torch::Tensor & inputTensor) {
-        this->inputTensor = inputTensor;
         auto inputDims = inputTensor.sizes();
         batchSize = inputDims[0];
-        inputTensor = torch::cat({inputTensor, torch::ones({batchSize, 1}, torch::kCUDA)}, -1);
-        return torch::matmul(inputTensor, weights);
+
+        this->inputTensor = torch::cat({inputTensor, torch::ones({batchSize, 1}, torch::kCUDA)}, -1);
+        return torch::matmul(this->inputTensor, weights);
+ 
         // return torch::matmul(inputTensor, weights) + bias;
 }
 
@@ -30,7 +33,9 @@ torch::Tensor backward(torch::Tensor & errorTensor) {
 
     weights = optimizer.update(weights, gradientWeights);
     
-    return torch::matmul(errorTensor, weights.transpose(1, 0));
+    auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inputSize)});
+
+    return out;
 }
 
 private:
