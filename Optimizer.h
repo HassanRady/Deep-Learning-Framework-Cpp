@@ -53,8 +53,8 @@ public:
     torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
         k = k + 1;
 
-        auto v = mu * vInit + (1 - mu) * gradientTensor;
-        auto r = rho * rInit + (1 - rho) * gradientTensor.pow(2);
+        v = mu * v + (1 - mu) * gradientTensor;
+        r = rho * r + (1 - rho) * gradientTensor.pow(2);
 
         v = mu * v + (1 - mu) * gradientTensor;
         r = rho * r + (1 - rho) * gradientTensor.pow(2);
@@ -67,5 +67,8 @@ public:
     }
 
 private:
-    double mu, rho, epsilon, k = 0.0, vInit = 0.0, rInit = 0.0;
+    double mu, rho, epsilon, k = 0.0;
+    torch::Tensor v = torch::zeros({1}, torch::kCUDA);
+    torch::Tensor r = torch::zeros({1}, torch::kCUDA);
+
 };
