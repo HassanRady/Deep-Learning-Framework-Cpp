@@ -10,7 +10,7 @@ public:
 
     Optimizer(double learningRate) : learningRate(learningRate) {}
 
-    virtual torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) = 0;
+    virtual torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) = 0;
 
 protected:
     double learningRate;
@@ -22,7 +22,7 @@ public:
 
     Sgd() {}
 
-    torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
+    torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
         weightTensor = weightTensor - learningRate * gradientTensor;
         return weightTensor;
     }
@@ -33,21 +33,15 @@ class SgdWithMomentum : public Optimizer {
 public:
     SgdWithMomentum(double learningRate, double momentum) : Optimizer(learningRate), momentum(momentum) {}
 
-    torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
-        bool firstFlag = true;
-        if (firstFlag) {
-            auto v = momentum * vInit - learningRate * gradientTensor;
-            firstFlag = false;
-        } else {
-            v = momentum * v - learningRate * gradientTensor;
-        }
+    torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
+        v = momentum * v - learningRate * gradientTensor;
         weightTensor = weightTensor + v;
         return weightTensor;
     }
 
 private:
     double momentum;
-    double vInit = 0.0;
+    torch::Tensor v = torch::zeros({1}, torch::kCUDA);
 };
 
 class Adam : public Optimizer {
@@ -56,17 +50,15 @@ public:
             learningRate), mu(mu), rho(rho),
                                                                                                    epsilon(epsilon) {}
 
-    torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
-        bool firstFlag = true;
+    torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override {
         k = k + 1;
-        if (firstFlag) {
-            auto v = mu * vInit + (1 - mu) * gradientTensor;
-            auto r = rho * rInit + (1 - rho) * gradientTensor.pow(2);
-            firstFlag = false;
-        } else {
-            v = mu * v + (1 - mu) * gradientTensor;
-            r = rho * r + (1 - rho) * gradientTensor.pow(2);
-        }
+
+        auto v = mu * vInit + (1 - mu) * gradientTensor;
+        auto r = rho * rInit + (1 - rho) * gradientTensor.pow(2);
+
+        v = mu * v + (1 - mu) * gradientTensor;
+        r = rho * r + (1 - rho) * gradientTensor.pow(2);
+
         auto vHat = (v) / (1 - pow(mu, k));
         auto rHat = (r) / (1 - pow(rho, k));
 
