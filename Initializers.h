@@ -3,24 +3,19 @@
 
 class WeightInitializer {
 public:
-    WeightInitializer(bool cuda = true) : cuda(cuda) {}
+    WeightInitializer() {}
 
-    virtual torch::Tensor initialize(torch::IntArrayRef weightShape, int fanIn, int fanOut) = 0;
-
-protected:
-    bool cuda;
+    virtual int initialize(torch::Tensor &tensor, int fanIn, int fanOut) = 0;
 };
 
 class Constant : public WeightInitializer {
 public:
-    Constant(float scalar = 0.1, bool cuda = true) : scalar(scalar), WeightInitializer(cuda) {
+    Constant(float scalar = 0.1) : scalar(scalar) {
     }
 
-    torch::Tensor initialize(torch::IntArrayRef weightShape, int fanIn, int fanOut) override {
-        if (cuda)
-            return torch::full({fanIn, fanOut}, scalar, torch::kCUDA);
-        else
-            return torch::full({fanIn, fanOut}, scalar);
+    int initialize(torch::Tensor &tensor, int fanIn, int fanOut) override {
+        tensor.fill_(scalar);
+        return 0;
     }
 
 private:
@@ -29,38 +24,32 @@ private:
 
 class UniformRandom : public WeightInitializer {
 public:
-    UniformRandom(bool cuda = true) : WeightInitializer(cuda) {}
+    UniformRandom() {}
 
-    torch::Tensor initialize(torch::IntArrayRef weightShape, int fanIn, int fanOut) override {
-        if (cuda)
-            return torch::rand(weightShape, torch::kCUDA);
-        else
-            return torch::rand(weightShape);
+     int initialize(torch::Tensor &tensor, int fanIn, int fanOut) override {
+             tensor.fill_(torch::rand_like(tensor));
+        return 0;
     }
 };
 
 class Xavier : public WeightInitializer {
 public:
-    Xavier(bool cuda = true) : WeightInitializer(cuda) {}
+    Xavier() {}
 
-    torch::Tensor initialize(torch::IntArrayRef weightShape, int fanIn, int fanOut) override {
-        auto sigma = std::sqrt((2) / (fanIn + fanOut));
-        if (cuda)
-            return torch::nn::init::normal_(torch::empty(weightShape), 0, sigma, torch::kCUDA);
-        else
-            return torch::nn::init::normal_(torch::empty(weightShape), 0, sigma);
+     int initialize(torch::Tensor &tensor, int fanIn, int fanOut) override {
+        auto sigma = std::sqrt((float)(2) / (fanIn + fanOut));
+        torch::nn::init::normal_(tensor, 0, sigma);
+        return 0;
     }
 };
 
 class He : public WeightInitializer {
 public:
-    He(bool cuda = true) : WeightInitializer(cuda) {}
+    He() {}
 
-    torch::Tensor initialize(torch::IntArrayRef weightShape, int fanIn, int fanOut) override {
-        auto sigma = std::sqrt((2) / (fanIn + fanOut));
-        if (cuda)
-            return torch::nn::init::normal_(torch::empty(weightShape), 0, sigma, torch::kCUDA);
-        else
-            return torch::nn::init::normal_(torch::empty(weightShape), 0, sigma);
+    int initialize(torch::Tensor &tensor, int fanIn, int fanOut) override {
+        auto sigma = std::sqrt((float) (2) / (fanIn + fanOut));
+        torch::nn::init::normal_(tensor, 0, sigma);
+        return 0;
     }
 };
