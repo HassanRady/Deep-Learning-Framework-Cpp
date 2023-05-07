@@ -1,6 +1,7 @@
 
 
 #include "Base.h"
+#include "Initializers.h"
 #include "Optimizer.h"
 
 #include "iostream"
@@ -9,43 +10,61 @@
 using namespace torch::indexing;
 
 
-class Linear: public  BaseLayer{
-public: Linear(int inFeatures, int outFeatures) : inputSize(inFeatures), outputSize(outFeatures){
+class Linear : public BaseLayer {
+public:
+    Linear(int inFeatures, int outFeatures, He weightInitializer = He(), Constant biasInitializer = Constant())
+            : inFeatures(inFeatures), outFeatures(outFeatures) {
         trainable = true;
         initializable = true;
 
-        weights = torch::randn({inFeatures+1, outFeatures}, torch::kCUDA);
-        bias = torch::ones({outFeatures, 1}, torch::kCUDA);
+        this->weightInitializer = &weightInitializer;
+        this->biasInitializer = &biasInitializer;
+
+//        weights = torch::empty({inFeatures + 1, outFeatures}, torch::kCUDA);
+//        bias = torch::ones({outFeatures, 1}, torch::kCUDA);
+        initialize();
+
     }
 
-    torch::Tensor forward(torch::Tensor & inputTensor) {
+    void initialize() {
+        weights = torch::empty({inFeatures, outFeatures}, torch::kCUDA);
+        bias = torch::empty({1, outFeatures}, torch::kCUDA);
+
+        weightInitializer->initialize(weights, inFeatures, outFeatures);
+        biasInitializer->initialize(bias, 1, outFeatures);
+
+        weights = torch::cat({weights, bias}, 0);
+    }
+
+    torch::Tensor forward(torch::Tensor &inputTensor) {
         auto inputDims = inputTensor.sizes();
         batchSize = inputDims[0];
 
         this->inputTensor = torch::cat({inputTensor, torch::ones({batchSize, 1}, torch::kCUDA)}, -1);
         return torch::matmul(this->inputTensor, weights);
- 
-        // return torch::matmul(inputTensor, weights) + bias;
-}
+    }
 
-torch::Tensor backward(torch::Tensor & errorTensor) {
+    torch::Tensor backward(torch::Tensor &errorTensor) {
 
-    gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
+        gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 
 
-    weights = optimizer->update(weights, gradientWeights);
+        weights = optimizer->update(weights, gradientWeights);
 
-    auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inputSize)});
+        auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inFeatures)});
 
-    return out;
-}
+        return out;
+    }
 
-private:
-    int inputSize;
-    int outputSize;
+public:
+    int inFeatures;
+    int outFeatures;
 
     torch::Tensor weights;
     torch::Tensor gradientWeights;
+
+    WeightInitializer *weightInitializer;
+    WeightInitializer *biasInitializer;
 
     torch::Tensor bias;
     torch::Tensor gradientBias;
@@ -55,6 +74,6 @@ private:
     int batchSize;
 
 public:
-    Optimizer * optimizer;
+    Optimizer *optimizer;
 };
 
