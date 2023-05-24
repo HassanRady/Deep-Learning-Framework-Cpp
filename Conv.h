@@ -17,12 +17,18 @@ public:
         this->inChannels = inChannels;
         this->outChannels = outChannels;
 
+        // TMP
         this->kernelSize = kernelSize;
         kernelDim1 = kernelSize;
         kernelDim2 = kernelSize;
 
+        // TMP
         this->stride = stride;
-        this->padding = padding;
+        strideDim1 = stride;
+        strideDim2 = stride;
+
+        checkPaddingType(padding);
+
         this->weightInitializer = weightInitializer;
         this->biasInitializer = biasInitializer;
 
@@ -44,8 +50,38 @@ public:
         return (int) 1 + (dimSize - kernelSize + startPad + endPad) / stride;
     }
 
+    torch::ArrayRef<int> getPadSizeSame(int kernelSize) {
+        int startPad;
+        if (kernelSize % 2 == 1) {
+            startPad = (int) (kernelSize - 1) / 2;
+            return {startPad, startPad};
+        }
+        startPad = (int) kernelSize / 2 - 1;
+        int endPad = (int) kernelSize/2;
+        return {startPad, endPad};
+    }
+
+    void checkPaddingType(std::string padding) {
+        if (padding == "same") {
+            padSizeDim1 = getPadSizeSame(kernelDim1);
+            padSizeDim2 = getPadSizeSame(kernelDim2);
+        } else if(padding == "valid") {
+            padSizeDim1 = {0, 0};
+            padSizeDim2 = {0, 0};
+        } else if(isdigit(padding)) {
+            padSizeDim1 = {padding, padding};
+            padSizeDim2 = {padding, padding};
+        }
+    }
+
     torch::Tensor convolve(torch::Tensor & slice, torch::Tensor kernel, torch::Tensor & bias) {
         return torch::sum(slice * kernel) + bias;
+    }
+
+    torch::ArrayRef<int> getOutputShape(int inputSizeDim1, int inputSizeDim2) {
+        int outputSizeDim1 = getShapeAfterConv(inputSizeDim1, kernelDim1, padSizeDim1, strideDim1);
+        int outputSizeDim2 = getShapeAfterConv(inputSizeDim2, kernelDim2, padSizeDim2, strideDim2);
+        return {batchSize, outChannels, outputSizeDim1, outputSizeDim2};
     }
 
 private:
@@ -62,10 +98,14 @@ private:
     int strideDim2;
 
     std::string padding;
+    torch::ArrayRef<int> padSizeDim1;
+    torch::ArrayRef<int> padSizeDim2;
+
     WeightInitializer weightInitializer;
     WeightInitializer biasInitializer;
 
     torch::Tensor weights;
     torch::Tensor bias;
 
+    int batchSize;
 };
