@@ -1,6 +1,4 @@
-//
-// Created by hassan on 22.04.23.
-//
+#pragma once
 
 #include <torch/torch.h>
 
