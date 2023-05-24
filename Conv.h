@@ -16,32 +16,37 @@ public:
 
         this->inChannels = inChannels;
         this->outChannels = outChannels;
+
         this->kernelSize = kernelSize;
+        kernelDim1 = kernelSize;
+        kernelDim2 = kernelSize;
+
         this->stride = stride;
         this->padding = padding;
         this->weightInitializer = weightInitializer;
         this->biasInitializer = biasInitializer;
 
-        this->initialize();
+        initialize();
 
     }
 
     void initialize() {
-        weights = torch::empty({inFeatures, outFeatures}, torch::kCUDA);
-        bias = torch::empty({1, outFeatures}, torch::kCUDA);
+        weights = torch::empty({outChannels, inChannels, kernelDim1, kernelDim2}, torch::kCUDA);
+        bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
-        weightInitializer.initialize(weights, inFeatures, outFeatures);
-        biasInitializer.initialize(bias, 1, outFeatures);
-
-        weights = torch::cat({weights, bias}, 0);
+        weightInitializer.initialize(weights, inChannels * kernelDim1 * kernelDim2, kernelDim1 * kernelDim2 * outChannels);
+        biasInitializer.initialize(bias, outChannels, 1);
     }
 
     int getShapeAfterConv(int dimSize, int kernelSize, int pad, int stride) {
         int startPad = pad;
         int endPad = pad;
-        return (int) 1 + (dimSize - kernelSize + startPad + endPad) / stride
+        return (int) 1 + (dimSize - kernelSize + startPad + endPad) / stride;
     }
 
+    torch::Tensor convolve(torch::Tensor & slice, torch::Tensor kernel, torch::Tensor & bias) {
+        return torch::sum(slice * kernel) + bias;
+    }
 
 private:
     Optimizer optimizer;
@@ -61,6 +66,6 @@ private:
     WeightInitializer biasInitializer;
 
     torch::Tensor weights;
-    torch::Tenosr bias;
+    torch::Tensor bias;
 
 };
