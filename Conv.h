@@ -9,7 +9,8 @@
 
 class Conv2d : public BaseLayer {
 public:
-    Conv2d(int inChannels, int outChannels, int kernelSize, int stride, std::string padding,
+    Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelSize, torch::ExpandingArray<2> stride,
+           std::string padding,
            WeightInitializer weightInitializer = He(), WeightInitializer biasInitializer = Constant()) {
         trainable = true;
         initializable = true;
@@ -17,15 +18,11 @@ public:
         this->inChannels = inChannels;
         this->outChannels = outChannels;
 
-        // TMP
-        this->kernelSize = kernelSize;
-        kernelDim1 = kernelSize;
-        kernelDim2 = kernelSize;
+        kernelDim1 = kernelSize->operator[](0);
+        kernelDim2 = kernelSize->operator[](1);
 
-        // TMP
-        this->stride = stride;
-        strideDim1 = stride;
-        strideDim2 = stride;
+        strideDim1 = stride->operator[](0);
+        strideDim2 = stride->operator[](1);
 
         checkPaddingType(padding);
 
@@ -40,24 +37,25 @@ public:
         weights = torch::empty({outChannels, inChannels, kernelDim1, kernelDim2}, torch::kCUDA);
         bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
-        weightInitializer.initialize(weights, inChannels * kernelDim1 * kernelDim2, kernelDim1 * kernelDim2 * outChannels);
+        weightInitializer.initialize(weights, inChannels * kernelDim1 * kernelDim2,
+                                     kernelDim1 * kernelDim2 * outChannels);
         biasInitializer.initialize(bias, outChannels, 1);
     }
 
-    int getShapeAfterConv(int dimSize, int kernelSize, int pad, int stride) {
-        int startPad = pad;
-        int endPad = pad;
+    int getShapeAfterConv(int dimSize, int kernelSize, torch::ArrayRef<int> pad, int stride) {
+        int startPad = pad[0];
+        int endPad = pad[1];
         return (int) 1 + (dimSize - kernelSize + startPad + endPad) / stride;
     }
 
-    torch::ArrayRef<int> getPadSizeSame(int kernelSize) {
+    std::vector<int> getPadSizeSame(int kernelSize) {
         int startPad;
         if (kernelSize % 2 == 1) {
             startPad = (int) (kernelSize - 1) / 2;
             return {startPad, startPad};
         }
         startPad = (int) kernelSize / 2 - 1;
-        int endPad = (int) kernelSize/2;
+        int endPad = (int) kernelSize / 2;
         return {startPad, endPad};
     }
 
@@ -65,16 +63,32 @@ public:
         if (padding == "same") {
             padSizeDim1 = getPadSizeSame(kernelDim1);
             padSizeDim2 = getPadSizeSame(kernelDim2);
-        } else if(padding == "valid") {
+        } else if (padding == "valid") {
             padSizeDim1 = {0, 0};
             padSizeDim2 = {0, 0};
-        } else if(isdigit(padding)) {
-            padSizeDim1 = {padding, padding};
-            padSizeDim2 = {padding, padding};
         }
+//        else if (isdigit(padding)) {
+//            padSizeDim1 = {padding, padding};
+//            padSizeDim2 = {padding, padding};
+//        }
     }
 
-    torch::Tensor convolve(torch::Tensor & slice, torch::Tensor kernel, torch::Tensor & bias) {
+    /*
+     * images shape (BATCHxCHANNELSxHIGHTxWIDTH)
+     * */
+    torch::Tensor padImgSame(torch::Tensor& images, std::vector<int> padDim1, std::vector<int> padDim2) {
+        int startPadDim1 = padDim1[0];
+        int endPadDim1 = padDim1[1];
+        int startPadDim2 = padDim2[0];
+        int endPadDim2 = padDim2[1];
+
+        std::vector<int64_t> padding = {startPadDim2, endPadDim2, startPadDim1, endPadDim1, 0, 0, 0, 0};
+        torch::nn::functional::PadFuncOptions options(padding);
+
+        return torch::nn::functional::pad(images, options);
+    }
+
+    torch::Tensor convolve(torch::Tensor &slice, torch::Tensor kernel, torch::Tensor &bias) {
         return torch::sum(slice * kernel) + bias;
     }
 
@@ -98,8 +112,8 @@ private:
     int strideDim2;
 
     std::string padding;
-    torch::ArrayRef<int> padSizeDim1;
-    torch::ArrayRef<int> padSizeDim2;
+    std::vector<int> padSizeDim1;
+    std::vector<int> padSizeDim2;
 
     WeightInitializer weightInitializer;
     WeightInitializer biasInitializer;
