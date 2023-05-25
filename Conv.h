@@ -1,3 +1,6 @@
+// TODO: padding type
+
+
 #include <iostream>
 #include <torch/torch.h>
 #include "string"
@@ -18,13 +21,13 @@ public:
         this->inChannels = inChannels;
         this->outChannels = outChannels;
 
-        kernelDim1 = kernelSize->operator[](0);
-        kernelDim2 = kernelSize->operator[](1);
+        kernelSizeDim1 = kernelSize->operator[](0);
+        kernelSizeDim2 = kernelSize->operator[](1);
 
         strideDim1 = stride->operator[](0);
         strideDim2 = stride->operator[](1);
 
-        checkPaddingType(padding);
+        this->padding = padding;
 
         this->weightInitializer = weightInitializer;
         this->biasInitializer = biasInitializer;
@@ -35,16 +38,16 @@ public:
 
 
     void initialize() {
-        weights = torch::empty({outChannels, inChannels, kernelDim1, kernelDim2}, torch::kCUDA);
+        weights = torch::empty({outChannels, inChannels, kernelSizeDim1, kernelSizeDim2}, torch::kCUDA);
         bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
-        weightInitializer.initialize(weights, inChannels * kernelDim1 * kernelDim2,
-                                     kernelDim1 * kernelDim2 * outChannels);
+        weightInitializer.initialize(weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
+                                     kernelSizeDim1 * kernelSizeDim2 * outChannels);
         biasInitializer.initialize(bias, outChannels, 1);
     }
 
 
-    int getShapeAfterConv(int dimSize, int kernelSize, torch::ArrayRef<int> pad, int stride) {
+    int getShapeAfterConv(int dimSize, int kernelSize, std::vector<int> pad, int stride) {
         int startPad = pad[0];
         int endPad = pad[1];
         return (int) 1 + (dimSize - kernelSize + startPad + endPad) / stride;
@@ -65,8 +68,8 @@ public:
 
     void checkPaddingType(std::string padding) {
         if (padding == "same") {
-            padSizeDim1 = getPadSizeSame(kernelDim1);
-            padSizeDim2 = getPadSizeSame(kernelDim2);
+            padSizeDim1 = getPadSizeSame(kernelSizeDim1);
+            padSizeDim2 = getPadSizeSame(kernelSizeDim2);
         } else if (padding == "valid") {
             padSizeDim1 = {0, 0};
             padSizeDim2 = {0, 0};
@@ -81,11 +84,11 @@ public:
     /*
      * images shape (BATCHxCHANNELSxHIGHTxWIDTH)
      * */
-    torch::Tensor padImgSame(torch::Tensor &images, std::vector<int> padDim1, std::vector<int> padDim2) {
-        int startPadDim1 = padDim1[0];
-        int endPadDim1 = padDim1[1];
-        int startPadDim2 = padDim2[0];
-        int endPadDim2 = padDim2[1];
+    torch::Tensor padImagesSame(torch::Tensor &images) {
+        int startPadDim1 = padSizeDim1[0];
+        int endPadDim1 = padSizeDim1[1];
+        int startPadDim2 = padSizeDim2[0];
+        int endPadDim2 = padSizeDim2[1];
 
         std::vector <int64_t> padding = {startPadDim2, endPadDim2, startPadDim1, endPadDim1, 0, 0, 0, 0};
         torch::nn::functional::PadFuncOptions options(padding);
@@ -108,26 +111,73 @@ public:
     }
 
 
-    torch::Tensor convolve(torch::Tensor &slice, torch::Tensor kernel, torch::Tensor &bias) {
-        return torch::sum(slice * kernel) + bias;
+    torch::Tensor padImages(torch::Tensor &images) {
+        checkPaddingType(padding);
+        if (padding == "same")
+            return padImagesSame(images);
     }
 
 
-    torch::ArrayRef<int> getOutputShape(int inputSizeDim1, int inputSizeDim2) {
-        int outputSizeDim1 = getShapeAfterConv(inputSizeDim1, kernelDim1, padSizeDim1, strideDim1);
-        int outputSizeDim2 = getShapeAfterConv(inputSizeDim2, kernelDim2, padSizeDim2, strideDim2);
+    std::vector<int> getForwardOutputShape(int inputSizeDim1, int inputSizeDim2) {
+        int outputSizeDim1 = getShapeAfterConv(inputSizeDim1, kernelSizeDim1, padSizeDim1, strideDim1);
+        int outputSizeDim2 = getShapeAfterConv(inputSizeDim2, kernelSizeDim2, padSizeDim2, strideDim2);
         return {batchSize, outChannels, outputSizeDim1, outputSizeDim2};
     }
 
 
-private:
+    torch::Tensor convolve(torch::Tensor &slice, torch::Tensor & kernel, torch::Tensor &bias) {
+        return torch::sum(slice * kernel) + bias;
+    }
+
+
+    torch::Tensor forward(torch::Tensor inputTensor) {
+        this->inputTensor = inputTensor;
+        batchSize = inputTensor.sizes()[0];
+        auto inputSizeDim1 = inputTensor.sizes()[2];
+        auto inputSizeDim2 = inputTensor.sizes()[3];
+        inputTensorPadded = padImages(inputTensor);
+
+        forwardOutputShape = getForwardOutputShape(inputSizeDim1, inputSizeDim2);
+        int outputDim1 = forwardOutputShape[2];
+        int outputDim2 = forwardOutputShape[3];
+        torch::Tensor forwardOutput = torch::empty({batchSize, outChannels, outputDim1, outputDim2}, torch::kCUDA);
+
+        for (int n = 0; n < batchSize; ++n) {
+            for (int outChannel = 0; outChannel < outChannels; ++outChannel) {
+                torch::Tensor kernel = weights.index({outChannel});
+                torch::Tensor bias = this->bias.index({outChannel});
+
+                for (int i = 0; i < outputDim1; ++i) {
+                    for (int j = 0; j < outputDim2; ++j) {
+                        int startDim1 = i * strideDim1;
+                        int endDim1 = startDim1 + kernelSizeDim1;
+                        int startDim2 = j * strideDim2;
+                        int endDim2 = startDim2 + kernelSizeDim2;
+                        torch::Tensor slice = inputTensorPadded.index(
+                                {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
+                                 torch::indexing::Slice(startDim2, endDim2)});
+
+                        forwardOutput.index_put_({n, outChannel, i, j}, convolve(slice, kernel, bias).to(torch::kCUDA));
+                    }
+                }
+            }
+        }
+
+        return forwardOutput;
+    }
+
+
+//private:
+    int batchSize;
+
     Optimizer optimizer;
+
     int inChannels;
     int outChannels;
 
     int kernelSize;
-    int kernelDim1;
-    int kernelDim2;
+    int kernelSizeDim1;
+    int kernelSizeDim2;
 
     int stride;
     int strideDim1;
@@ -139,9 +189,11 @@ private:
 
     WeightInitializer weightInitializer;
     WeightInitializer biasInitializer;
-
     torch::Tensor weights;
     torch::Tensor bias;
 
-    int batchSize;
+    torch::Tensor inputTensor;
+    torch::Tensor inputTensorPadded;
+
+    std::vector<int> forwardOutputShape;
 };
