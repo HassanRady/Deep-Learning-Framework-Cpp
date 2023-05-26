@@ -100,7 +100,7 @@ public:
     /*
      * image shape CHANNELSxHIGHTxWIDTH
      **/
-    torch::Tensor removePad(torch::Tensor &image) {
+    torch::Tensor removePad(torch::Tensor image) {
         int startPadDim1 = padSizeDim1[0];
         int endPadDim1 = padSizeDim1[1];
         int startPadDim2 = padSizeDim2[0];
@@ -125,7 +125,7 @@ public:
     }
 
 
-    torch::Tensor convolve(torch::Tensor &slice, torch::Tensor & kernel, torch::Tensor &bias) {
+    torch::Tensor convolve(torch::Tensor &slice, torch::Tensor &kernel, torch::Tensor &bias) {
         return torch::sum(slice * kernel) + bias;
     }
 
@@ -167,7 +167,48 @@ public:
     }
 
 
-//private:
+    torch::Tensor backward(torch::Tensor errorTensor) {
+        int outputDim1 = forwardOutputShape[2];
+        int outputDim2 = forwardOutputShape[3];
+
+        torch::Tensor backwardOutput = torch::empty_like(inputTensor);
+        torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
+        gradWeight = torch::empty_like(weights);
+        gradBias = torch::empty({outChannels, 1, 1, 1}, torch::kCUDA);
+
+        for (int n = 0; n < batchSize; ++n) {
+            for (int outChannel = 0; outChannel < outChannels; ++outChannel) {
+                for (int i = 0; i < outputDim1; ++i) {
+                    for (int j = 0; j < outputDim2; ++j) {
+                        int startDim1 = i * strideDim1;
+                        int endDim1 = startDim1 + kernelSizeDim1;
+                        int startDim2 = j * strideDim2;
+                        int endDim2 = startDim2 + kernelSizeDim2;
+                        torch::Tensor slice = inputTensorPadded.index(
+                                {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
+                                 torch::indexing::Slice(startDim2, endDim2)});
+
+                        gradWeight.index_put_({outChannel}, gradWeight.index({outChannel}) +
+                                                            slice * errorTensor.index({n, outChannel, i, j}));
+                        gradBias.index_put_({outChannel},
+                                            gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
+                        gradInput.index_put_({n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
+                                              torch::indexing::Slice(startDim2, endDim2)},
+                                             errorTensor.index({n, outChannel, i, j}) * weights.index({outChannel}) +
+                                             gradInput.index({n, torch::indexing::Slice(),
+                                                              torch::indexing::Slice(startDim1, endDim1),
+                                                              torch::indexing::Slice(startDim2, endDim2)}));
+                    }
+                }
+            }
+            backwardOutput.index_put_({n}, removePad(gradInput.index({n})));
+        }
+        weights = optimizer.update(weights, gradWeight);
+        return backwardOutput;
+    }
+
+
+private:
     int batchSize;
 
     Optimizer optimizer;
@@ -191,6 +232,8 @@ public:
     WeightInitializer biasInitializer;
     torch::Tensor weights;
     torch::Tensor bias;
+    torch::Tensor gradWeight;
+    torch::Tensor gradBias;
 
     torch::Tensor inputTensor;
     torch::Tensor inputTensorPadded;
