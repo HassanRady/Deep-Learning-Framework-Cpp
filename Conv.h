@@ -168,8 +168,8 @@ public:
 
 
     torch::Tensor backward(torch::Tensor errorTensor) {
-        int outputSizeDim1 = forwardOutputShape[2];
-        int outputSizeDim2 = forwardOutputShape[3];
+        int outputSizeDim1 = errorTensor.sizes()[2];
+        int outputSizeDim2 = errorTensor.sizes()[3];
 
         torch::Tensor backwardOutput = torch::empty_like(inputTensor);
         torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
