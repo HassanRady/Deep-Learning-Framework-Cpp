@@ -138,17 +138,17 @@ public:
         inputTensorPadded = padImages(inputTensor);
 
         forwardOutputShape = getForwardOutputShape(inputSizeDim1, inputSizeDim2);
-        int outputDim1 = forwardOutputShape[2];
-        int outputDim2 = forwardOutputShape[3];
-        torch::Tensor forwardOutput = torch::empty({batchSize, outChannels, outputDim1, outputDim2}, torch::kCUDA);
+        int outputSizeDim1 = forwardOutputShape[2];
+        int outputSizeDim2 = forwardOutputShape[3];
+        torch::Tensor forwardOutput = torch::empty({batchSize, outChannels, outputSizeDim1, outputSizeDim2}, torch::kCUDA);
 
         for (int n = 0; n < batchSize; ++n) {
             for (int outChannel = 0; outChannel < outChannels; ++outChannel) {
                 torch::Tensor kernel = weights.index({outChannel});
                 torch::Tensor bias = this->bias.index({outChannel});
 
-                for (int i = 0; i < outputDim1; ++i) {
-                    for (int j = 0; j < outputDim2; ++j) {
+                for (int i = 0; i < outputSizeDim1; ++i) {
+                    for (int j = 0; j < outputSizeDim2; ++j) {
                         int startDim1 = i * strideDim1;
                         int endDim1 = startDim1 + kernelSizeDim1;
                         int startDim2 = j * strideDim2;
@@ -168,8 +168,8 @@ public:
 
 
     torch::Tensor backward(torch::Tensor errorTensor) {
-        int outputDim1 = forwardOutputShape[2];
-        int outputDim2 = forwardOutputShape[3];
+        int outputSizeDim1 = forwardOutputShape[2];
+        int outputSizeDim2 = forwardOutputShape[3];
 
         torch::Tensor backwardOutput = torch::empty_like(inputTensor);
         torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
@@ -178,8 +178,8 @@ public:
 
         for (int n = 0; n < batchSize; ++n) {
             for (int outChannel = 0; outChannel < outChannels; ++outChannel) {
-                for (int i = 0; i < outputDim1; ++i) {
-                    for (int j = 0; j < outputDim2; ++j) {
+                for (int i = 0; i < outputSizeDim1; ++i) {
+                    for (int j = 0; j < outputSizeDim2; ++j) {
                         int startDim1 = i * strideDim1;
                         int endDim1 = startDim1 + kernelSizeDim1;
                         int startDim2 = j * strideDim2;
