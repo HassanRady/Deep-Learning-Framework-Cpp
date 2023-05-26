@@ -60,6 +60,39 @@ public:
         return output;
     }
 
+    torch::Tensor backward(torch::Tensor errorTensor) {
+        int outputSizeDim1 = errorTensor.sizes()[2];
+        int outputSizeDim2 = errorTensor.sizes()[3];
+        torch::Tensor gradInput = torch::zeros_like(inputTensor);
+
+
+        for (int n = 0; n < batchSize; ++n) {
+            for (int outChannel = 0; outChannel < outChannels; ++outChannel) {
+                for (int i = 0; i < outputSizeDim1; ++i) {
+                    for (int j = 0; j < outputSizeDim2; ++j) {
+                        int startDim1 = i * strideSizeDim1;
+                        int endDim1 = startDim1 + kernelSizeDim1;
+                        int startDim2 = j * strideSizeDim2;
+                        int endDim2 = startDim2 + kernelSizeDim2;
+                        torch::Tensor slice = inputTensor.index(
+                                {n, outChannel, torch::indexing::Slice(startDim1, endDim1),
+                                 torch::indexing::Slice(startDim2, endDim2)});
+
+                        auto mask = torch::eq(slice, torch::max(slice));
+                        gradInput.index_put_({n, outChannel, torch::indexing::Slice(startDim1, endDim1),
+                                              torch::indexing::Slice(startDim2, endDim2)},
+                                             mask * errorTensor.index({n, outChannel, i, j}) +
+                                             gradInput.index({n, outChannel, torch::indexing::Slice(startDim1, endDim1),
+                                                              torch::indexing::Slice(startDim2, endDim2)}));
+                    }
+                }
+            }
+        }
+
+
+        return gradInput;
+    }
+
 private:
     int batchSize;
 
