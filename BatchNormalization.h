@@ -14,62 +14,65 @@ public:
         this->eps = eps;
         this->momentum = momentum;
 
-        gamma = torch::ones({numFeatures}, torch::kCUDA);
-        beta = torch::zeros({numFeatures}, torch::kCUDA);
+        weight = torch::ones({numFeatures}, torch::kCUDA);
+        bias = torch::zeros({numFeatures}, torch::kCUDA);
 
         mean = torch::zeros({numFeatures}, torch::kCUDA);
         variance = torch::ones({numFeatures}, torch::kCUDA);
     }
 
-    torch::Tensor reshapeTensorForInput(torch::Tensor tensor) {
-        return tensor;
-    }
-
-    torch::Tensor reshapeTensorForOutput(torch::Tensor tensor) {
-        return tensor;
-    }
-
     torch::Tensor normalizeTrain(torch::Tensor &tensor) {
-        torch::Tensor batchMean = tensor.mean({0});
-        torch::Tensor batchVariance = tensor.var({0});
+        torch::Tensor batchMean = tensor.mean({0, 2, 3}, false);
+        torch::Tensor batchVariance = tensor.var({0, 2, 3}, false);
         torch::Tensor batchStd = torch::sqrt(batchVariance + eps);
+        auto n = tensor.numel() / tensor.sizes()[1];
 
-        inputTensorNormalized = (tensor - batchMean) / batchStd;
-        torch::Tensor inputBatchNormalized = gamma * inputTensorNormalized + beta;
+        mean = momentum * batchMean + (1 - momentum) * mean;
+        variance = momentum * batchVariance * n / (n - 1) + (1 - momentum) * variance;
 
-        if (torch::eq(mean, 0).item<float>() == 0) {
-            mean = batchMean;
-            variance = batchVariance;
-        } else {
-            mean = momentum * mean + (1 - momentum) * batchMean;
-            variance = momentum * variance + (1 - momentum) * batchVariance;
-        }
-
+        inputTensorNormalized = (tensor - batchMean.unsqueeze(0).unsqueeze(2).unsqueeze(3)) /
+                                batchStd.unsqueeze(0).unsqueeze(2).unsqueeze(3);
+        torch::Tensor inputBatchNormalized = weight.unsqueeze(0).unsqueeze(2).unsqueeze(3) * inputTensorNormalized +
+                                             bias.unsqueeze(0).unsqueeze(2).unsqueeze(3);
         return inputBatchNormalized;
     }
 
-    torch::Tenor normalizeTest(torch::Tensor &tensor) {
-        torch::Tensor inputTensorNormalize = (tensor - mean) / torch::sqrt(variance + eps);
-        torch::Tensor inputNormalized = gamma * inputTensorNormalize + beta;
+    torch::Tensor normalizeTest(torch::Tensor &tensor) {
+        torch::Tensor inputTensorNormalize = (tensor - mean.unsqueeze(0).unsqueeze(2).unsqueeze(3)) /
+                                             torch::sqrt(variance.unsqueeze(0).unsqueeze(2).unsqueeze(3) + eps);
+        torch::Tensor inputNormalized = weight.unsqueeze(0).unsqueeze(2).unsqueeze(3) * inputTensorNormalize +
+                                        bias.unsqueeze(0).unsqueeze(2).unsqueeze(3);
         return inputNormalized;
     }
 
-    torch::Tenosr forward(torch::Tensor &inputTensor) {
+    torch::Tensor forward(torch::Tensor &inputTensor) {
         this->inputTensor = inputTensor;
         batchSize = inputTensor.sizes()[0];
 
-        torch::Tensor inputTensorReshaped = reshapeTensorForInput(inputTensor);
-
         torch::Tensor inputNormalized;
 
-        if(!testPhase)
-            inputNormalized = normalizeTrain(inputTensorReshaped);
+        if (training)
+            inputNormalized = normalizeTrain(inputTensor);
         else
-            inputNormalized = normalizeTest(inputTensorReshaped);
+            inputNormalized = normalizeTest(inputTensor);
 
-        torch::Tensor forwardOutputReshaped = reshapeTensorForOutput(inputNormalized);
+        return inputNormalized;
+    }
 
-        return forwardOutputReshaped;
+    torch::Tensor backward(torch::Tensor &errorTensor) {
+        torch::Tensor gradientWeight = torch::sum(errorTensor * inputTensorNormalized, {0, 2, 3});
+        torch::Tensor gradientBias = errorTensor.sum({0, 2, 3});
+        torch::Tensor gradientInputNormalized = errorTensor * weight.unsqueeze(0).unsqueeze(2).unsqueeze(3);
+
+        torch::Tensor gradientInputTensor =
+                1 / (batchSize * torch::sqrt(variance.unsqueeze(0).unsqueeze(2).unsqueeze(3) + eps) *
+                     (batchSize * gradientInputNormalized - gradientInputNormalized.sum({0})) -
+                     inputTensorNormalized * torch::sum(gradientInputNormalized * inputTensorNormalized, {0}));
+
+        weight = optimizer.update(weight, gradientWeight);
+        bias = optimizer.update(bias, gradientBias);
+
+        return gradientInputTensor;
     }
 
 private:
@@ -79,8 +82,8 @@ private:
     float eps;
     float momentum;
 
-    torch::Tensor gamma;
-    torch::Tensor beta;
+    torch::Tensor weight;
+    torch::Tensor bias;
 
     torch::Tensor mean;
     torch::Tensor variance;
@@ -89,6 +92,4 @@ private:
     torch::Tensor inputTensorNormalized;
 
     Optimizer optimizer;
-
-    bool testPhase;
 };
