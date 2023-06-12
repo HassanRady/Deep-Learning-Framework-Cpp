@@ -4,7 +4,7 @@ project(CNN-IN-C++)
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_executable(CNN-IN-C++ main.cpp)
+add_executable(CNN-IN-C++  example.cpp)
 target_link_libraries(CNN-IN-C++ "${TORCH_LIBRARIES}")
 set_property(TARGET CNN-IN-C++ PROPERTY CXX_STANDARD 14)
 
