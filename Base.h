@@ -1,22 +1,31 @@
 #pragma once
 
+#include "torch/torch.h"
+#include "Optimizer.h"
+
 class BaseLayer {
-protected:
+public:
     BaseLayer() {
         trainable = false;
         initializable = false;
         training = true;
     }
 
-    int train() {
+    void train() {
         training = true;
     }
 
-    int eval() {
+    void eval() {
         training = false;
     }
+
+    virtual torch::Tensor forward(torch::Tensor & tensor);
+    virtual torch::Tensor forward(torch::Tensor & tensor, torch::Tensor & label);
+
+    virtual torch::Tensor backward(torch::Tensor & tensor);
 
     bool trainable;
     bool initializable;
     bool training;
+    Optimizer optimizer;
 };
