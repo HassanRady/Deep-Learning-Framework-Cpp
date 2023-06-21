@@ -9,7 +9,7 @@ public:
         initializable = false;
     }
 
-    torch::Tensor forward(torch::Tensor & inputTensor) {
+    torch::Tensor forward(torch::Tensor & inputTensor) override{
         this->inputTensor = inputTensor;
         auto inputTensorDims = inputTensor.sizes();
         int denseFeatures = 1;
@@ -20,7 +20,7 @@ public:
         return flattenTensor;
     }
 
-    torch::Tensor backward(torch::Tensor & errorTensor) {
+    torch::Tensor backward(torch::Tensor & errorTensor) override{
         auto reshapedTensor = errorTensor.reshape(inputTensor.sizes());
         return reshapedTensor;
     }
