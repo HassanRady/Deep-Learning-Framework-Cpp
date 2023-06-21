@@ -7,14 +7,18 @@
 #include "iostream"
 
 
-class Trainer{
+class Trainer {
 public:
-    Trainer(){}
-    Trainer(Network network, Dataset trainData, Dataset valData, BaseLayer loss, int batchSize): network(network), loss(loss), trainData(trainData), valData(valData), batchSize(batchSize){}
+    Trainer(Network network, Dataset trainData, Dataset valData, BaseLayer loss, int batchSize) : network(network),
+                                                                                                  loss(loss),
+                                                                                                  trainData(trainData),
+                                                                                                  valData(valData),
+                                                                                                  batchSize(
+                                                                                                          batchSize) {}
 
-    std::tuple <torch::Tensor, torch::Tensor> trainStep(torch::Tensor& x, torch::Tensor& y) {
+    std::tuple<float, torch::Tensor> trainStep(torch::Tensor &x, torch::Tensor &y) {
         torch::Tensor output = network.forward(x);
-        torch::Tensor loss = this->loss.forward(output, y);
+        float loss = this->loss.forward(output, y);
 
         y = this->loss.backward(y);
         network.backward(y);
@@ -22,9 +26,9 @@ public:
         return {loss, output};
     }
 
-    std::tuple <torch::Tensor, torch::Tensor> valStep(torch::Tensor& x, torch::Tensor& y) {
+    std::tuple<float, torch::Tensor> valStep(torch::Tensor &x, torch::Tensor &y) {
         torch::Tensor output = network.forward(x);
-        torch::Tensor loss = this->loss.forward(output, y);
+        float loss = this->loss.forward(output, y);
         return {loss, output};
     }
 
@@ -34,20 +38,20 @@ public:
         std::vector <torch::Tensor> runningPreds;
         float runningLoss = 0.0;
 
-        // TODO batcher
+        auto trainLoader = torch::data::make_data_loader(std::move(trainData),
+                                                    torch::data::DataLoaderOptions().batch_size(batchSize));
         torch::Tensor x, y;
-        auto trainLoader = toDataLoader(trainData);
-        for (auto &batch: trainLoader) {
-            x = batch.data()->data;
-            y = batch.data()->target;
+        for (auto &batch: *trainLoader) {
+            x = batch.data()->data.to(torch::kCUDA);
+            y = batch.data()->target.to(torch::kCUDA);
 
-            auto {batchLoss, preds} = trainStep(x, y);
+            auto [batchLoss, preds] = trainStep(x, y);
 
             runningLoss += batchLoss;
             runningPreds.push_back(preds);
         }
 
-        float epochLoss = runningLoss/(int)trainData.size();
+        float epochLoss = runningLoss / trainData.size().value();
 
         std::cout << "Train loss: " << epochLoss << "\n";
 
@@ -55,48 +59,39 @@ public:
     }
 
     std::tuple<float, std::vector<torch::Tensor>> valEpoch() {
-            network.eval();
+        network.eval();
 
         std::vector <torch::Tensor> runningPreds;
         float runningLoss = 0.0;
 
-        // TODO batcher
-        torch::Tensor x, y;
-        auto trainLoader = toDataLoader(trainData);
-        for (auto &batch: trainLoader) {
-            x = batch.data()->data;
-            y = batch.data()->target;
 
-            auto {batchLoss, preds} = valStep(x, y);
+        auto valLoader = torch::data::make_data_loader(std::move(valData),
+                                                  torch::data::DataLoaderOptions().batch_size(batchSize));
+        torch::Tensor x, y;
+        for (auto &batch: *valLoader) {
+            x = batch.data()->data.to(torch::kCUDA);
+            y = batch.data()->target.to(torch::kCUDA);
+
+            auto [batchLoss, preds] = valStep(x, y);
 
             runningLoss += batchLoss;
             runningPreds.push_back(preds);
         }
 
-        float epochLoss = runningLoss/valData.size();
+        float epochLoss = runningLoss / valData.size().value();
 
-        std::cout << "Train loss: " << epochLoss << "\n";
+        std::cout << "Val loss: " << epochLoss << "\n";
 
         return {epochLoss, runningPreds};
     }
 
-    auto toDataLoader(Dataset dataset) {
-        auto dataloader = torch::data::make_data_loader(
-                std::move(dataset),
-                torch::data::DataLoaderOptions().batch_size(batchSize)
-        );
-        return dataloader;
-    }
-
-    std::tuple<std::vector<float>, std::vector<float>> fit(int epochs) {
+    std::tuple <std::vector<float>, std::vector<float>> fit(int epochs) {
         std::vector<float> trainLosses;
         std::vector <torch::Tensor> trainPreds;
         std::vector<float> valLosses;
         std::vector <torch::Tensor> valPreds;
 
-        // TODO metrics
-
-        for (int i = 1; i == epochs; ++i) {
+        for (int i = 1; i <= epochs; ++i) {
             std::cout << "Epoch: " << i << "\n";
 
             auto [trainLoss, trainPred] = trainEpoch();
@@ -107,13 +102,13 @@ public:
 //            trainPreds.insert(trainPreds);
 //            valPreds.insert(valPreds);
 
+            // TODO metrics
+
             std::cout;
         }
 
         return {trainLosses, valLosses};
     }
-
-
 
 
 private:
