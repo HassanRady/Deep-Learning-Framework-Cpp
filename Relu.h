@@ -13,13 +13,13 @@ public:
         initializable = false;
     }
 
-    torch::Tensor forward(torch::Tensor &x)
+    torch::Tensor forward(torch::Tensor &x) override
     {
         pos = x.greater_(0);
         return torch::max(x, torch::zeros_like(x, torch::kCUDA));
     }
 
-    torch::Tensor backward(torch::Tensor &y)
+    torch::Tensor backward(torch::Tensor &y) override
     {
         return pos * y;
     }
