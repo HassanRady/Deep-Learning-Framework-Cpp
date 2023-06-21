@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <torch/torch.h>
 #include "Base.h"
@@ -10,13 +12,15 @@ public:
         initializable = false;
     }
 
-    torch::Tensor forward(torch::Tensor & y_hat, torch::Tensor & y) {
+    float forward(torch::Tensor & y_hat, torch::Tensor & y)  override{
         this->y = y;
         auto product = y * torch::log(y_hat + epsilon);
-        return -torch::sum(product);
+        float output = -product.sum().item<float>();
+        std::cout << output << "\n";
+        return output;
     }
 
-    torch::Tensor backward(torch::Tensor & grad_y) {
+    torch::Tensor backward(torch::Tensor & grad_y) override{
         return torch::where(grad_y.eq(1), -grad_y/(y + epsilon), 0);
     }
 
