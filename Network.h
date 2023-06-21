@@ -1,3 +1,5 @@
+#pragma once
+
 #include "torch/torch.h"
 #include "iostream"
 #include "vector"
@@ -6,12 +8,14 @@
 
 #include "Base.h"
 #include "Optimizer.h"
-#include "Loss.h"
 
 class Network {
 public:
-    Network() {}
+    Network(std::vector<BaseLayer> layers): layers(layers) {}
 
+    void append(BaseLayer layer) {
+        layers.push_back(layer);
+    }
 
     torch::Tensor forward(torch::Tensor x) {
         for (auto layer: layers)
