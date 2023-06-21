@@ -130,7 +130,7 @@ public:
     }
 
 
-    torch::Tensor forward(torch::Tensor inputTensor) {
+    torch::Tensor forward(torch::Tensor & inputTensor) override{
         this->inputTensor = inputTensor;
         batchSize = inputTensor.sizes()[0];
         auto inputSizeDim1 = inputTensor.sizes()[2];
@@ -167,7 +167,7 @@ public:
     }
 
 
-    torch::Tensor backward(torch::Tensor errorTensor) {
+    torch::Tensor backward(torch::Tensor& errorTensor) override{
         int outputSizeDim1 = errorTensor.sizes()[2];
         int outputSizeDim2 = errorTensor.sizes()[3];
 

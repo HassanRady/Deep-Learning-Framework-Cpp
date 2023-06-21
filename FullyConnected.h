@@ -35,7 +35,7 @@ public:
         weights = torch::cat({weights, bias}, 0);
     }
 
-    torch::Tensor forward(torch::Tensor &inputTensor) {
+    torch::Tensor forward(torch::Tensor &inputTensor) override{
         auto inputDims = inputTensor.sizes();
         batchSize = inputDims[0];
 
@@ -43,7 +43,7 @@ public:
         return torch::matmul(this->inputTensor, weights);
     }
 
-    torch::Tensor backward(torch::Tensor &errorTensor) {
+    torch::Tensor backward(torch::Tensor &errorTensor) override{
 
         gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 

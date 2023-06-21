@@ -27,7 +27,7 @@ public:
         return {batchSize, outChannels, outputSizeDim1, outputSizeDim2};
     }
 
-    torch::Tensor forward(torch::Tensor inputTensor) {
+    torch::Tensor forward(torch::Tensor& inputTensor) override{
         this->inputTensor = inputTensor;
         batchSize = inputTensor.sizes()[0];
         outChannels = inputTensor.sizes()[1];
@@ -60,7 +60,7 @@ public:
         return output;
     }
 
-    torch::Tensor backward(torch::Tensor errorTensor) {
+    torch::Tensor backward(torch::Tensor& errorTensor) override{
         int outputSizeDim1 = errorTensor.sizes()[2];
         int outputSizeDim2 = errorTensor.sizes()[3];
         torch::Tensor gradInput = torch::zeros_like(inputTensor);

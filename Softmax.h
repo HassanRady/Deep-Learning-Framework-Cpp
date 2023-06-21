@@ -13,7 +13,7 @@ public:
         initializable = false;
     }
 
-    torch::Tensor forward(torch::Tensor & x) {
+    torch::Tensor forward(torch::Tensor & x) override{
         auto max_val = x.amax({-1}, true);
         auto exp_x = torch::exp(x - max_val);
         auto sum_exp_x = exp_x.sum(-1, true);
@@ -21,7 +21,7 @@ public:
         return softmaxOutput;
     }
 
-    torch::Tensor backward(torch::Tensor & y) {
+    torch::Tensor backward(torch::Tensor & y) override{
         const auto batch_size = softmaxOutput.size(0);
         const auto num_classes = softmaxOutput.size(1);
         auto jacobian = torch::zeros({batch_size, num_classes, num_classes}, torch::kCUDA);

@@ -9,7 +9,7 @@ public:
         initializable = false;
     }
 
-    torch::Tensor forward(torch::Tensor &inputTensor) {
+    torch::Tensor forward(torch::Tensor &inputTensor) override{
         if (testingPhase)
             return inputTensor;
 
@@ -18,7 +18,7 @@ public:
         return mask * inputTensor;
     }
 
-    torch::Tensor backward(torch::Tensor &errorTensor) {
+    torch::Tensor backward(torch::Tensor &errorTensor) override{
         auto out = errorTensor * mask;
         out = out / probability;
         return out;
