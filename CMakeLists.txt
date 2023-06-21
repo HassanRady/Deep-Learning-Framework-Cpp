@@ -1,21 +1,19 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(CNN-IN-C++)
 
+# cmake -DCMAKE_PREFIX_PATH="/mnt/Work/Big Projects/CNN-IN-C++/Libraries/libtorch" ..
+# include_directories("${CMAKE_PREFIX_PATH}/Libraries/libtorch")
+# set(DCMAKE_PREFIX_PATH "/mnt/Work/Big Projects/CNN-IN-C++/Libraries/libtorch")
+
 find_package(Torch REQUIRED)
+find_package(OpenCV REQUIRED)
+
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_executable(CNN-IN-C++  example.cpp)
-target_link_libraries(CNN-IN-C++ "${TORCH_LIBRARIES}")
-set_property(TARGET CNN-IN-C++ PROPERTY CXX_STANDARD 14)
+add_executable(CNN-IN-C++  example2.cpp)
 
-# The following code block is suggested to be used on Windows.
-# According to https://github.com/pytorch/pytorch/issues/25457,
-# the DLLs need to be copied to avoid memory errors.
-if (MSVC)
-  file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET CNN-IN-C++
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     $<TARGET_FILE_DIR:CNN-IN-C++>)
-endif (MSVC)
+target_link_libraries(CNN-IN-C++ "${TORCH_LIBRARIES}")
+target_link_libraries(CNN-IN-C++ "${OpenCV_LIBS}")
+
+set_property(TARGET CNN-IN-C++ PROPERTY CXX_STANDARD 17)
