@@ -7,9 +7,7 @@ class WeightInitializer {
 public:
     WeightInitializer() {}
 
-    virtual int initialize(torch::Tensor &tensor, int fanIn, int fanOut) {
-        return 0;
-    };
+    virtual int initialize(torch::Tensor &tensor, int fanIn, int fanOut) {}
 };
 
 class Constant : public WeightInitializer {
