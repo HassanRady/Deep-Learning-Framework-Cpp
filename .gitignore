@@ -190,4 +190,4 @@ build/*
 
 main.cpp
 example*.cpp
-# End of https://www.toptal.com/developers/gitignore/api/clion,c++,cmake,visualstudiocode
+run.txt
