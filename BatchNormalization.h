@@ -45,7 +45,7 @@ public:
         return inputNormalized;
     }
 
-    torch::Tensor forward(torch::Tensor &inputTensor) {
+    torch::Tensor forward(torch::Tensor &inputTensor) override{
         this->inputTensor = inputTensor;
         batchSize = inputTensor.sizes()[0];
 
@@ -59,7 +59,7 @@ public:
         return inputNormalized;
     }
 
-    torch::Tensor backward(torch::Tensor &errorTensor) {
+    torch::Tensor backward(torch::Tensor &errorTensor) override{
         torch::Tensor gradientWeight = torch::sum(errorTensor * inputTensorNormalized, {0, 2, 3});
         torch::Tensor gradientBias = errorTensor.sum({0, 2, 3});
         torch::Tensor gradientInputNormalized = errorTensor * weight.unsqueeze(0).unsqueeze(2).unsqueeze(3);
@@ -69,8 +69,8 @@ public:
                      (batchSize * gradientInputNormalized - gradientInputNormalized.sum({0})) -
                      inputTensorNormalized * torch::sum(gradientInputNormalized * inputTensorNormalized, {0}));
 
-        weight = optimizer.update(weight, gradientWeight);
-        bias = optimizer.update(bias, gradientBias);
+        weight = optimizer->update(weight, gradientWeight);
+        bias = optimizer->update(bias, gradientBias);
 
         return gradientInputTensor;
     }
@@ -91,5 +91,5 @@ private:
     torch::Tensor inputTensor;
     torch::Tensor inputTensorNormalized;
 
-    Optimizer optimizer;
+    Optimizer* optimizer;
 };
