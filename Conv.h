@@ -14,7 +14,7 @@ class Conv2d : public BaseLayer {
 public:
     Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelSize, torch::ExpandingArray<2> stride,
            std::string padding,
-           WeightInitializer weightInitializer = He(), WeightInitializer biasInitializer = Constant()) {
+           WeightInitializer* weightInitializer, WeightInitializer* biasInitializer) {
         trainable = true;
         initializable = true;
 
@@ -41,9 +41,9 @@ public:
         weights = torch::empty({outChannels, inChannels, kernelSizeDim1, kernelSizeDim2}, torch::kCUDA);
         bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
-        weightInitializer.initialize(weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
+        weightInitializer->initialize(weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
                                      kernelSizeDim1 * kernelSizeDim2 * outChannels);
-        biasInitializer.initialize(bias, outChannels, 1);
+        biasInitializer->initialize(bias, outChannels, 1);
     }
 
 
@@ -90,7 +90,7 @@ public:
         int startPadDim2 = padSizeDim2[0];
         int endPadDim2 = padSizeDim2[1];
 
-        std::vector <int64_t> padding = {startPadDim2, endPadDim2, startPadDim1, endPadDim1, 0, 0, 0, 0};
+        std::vector <int64_t> padding = {startPadDim2, endPadDim2, startPadDim1, endPadDim1, 0, 0};
         torch::nn::functional::PadFuncOptions options(padding);
 
         return torch::nn::functional::pad(images, options);
@@ -203,7 +203,7 @@ public:
             }
             backwardOutput.index_put_({n}, removePad(gradInput.index({n})));
         }
-        weights = optimizer.update(weights, gradWeight);
+        weights = optimizer->update(weights, gradWeight);
         return backwardOutput;
     }
 
@@ -211,7 +211,7 @@ public:
 private:
     int batchSize;
 
-    Optimizer optimizer;
+    Optimizer* optimizer;
 
     int inChannels;
     int outChannels;
@@ -228,8 +228,8 @@ private:
     std::vector<int> padSizeDim1;
     std::vector<int> padSizeDim2;
 
-    WeightInitializer weightInitializer;
-    WeightInitializer biasInitializer;
+    WeightInitializer* weightInitializer;
+    WeightInitializer* biasInitializer;
     torch::Tensor weights;
     torch::Tensor bias;
     torch::Tensor gradWeight;
