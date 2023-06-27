@@ -1,5 +1,0 @@
-cmake -DCMAKE_PREFIX_PATH="/mnt/Work/Big Projects/CNN-IN-C++/Libraries/libtorch" ..
-
-cmake -DCMAKE_PREFIX_PATH="/mnt/Work/Big Projects/CNN-IN-C++/Libraries/build;/mnt/Work/Big Projects/CNN-IN-C++/Libraries/libtorch" ..
-
-export CUDACXX="/usr/local/cuda/bin/nvcc"
