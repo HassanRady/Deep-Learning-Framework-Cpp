@@ -11,7 +11,7 @@ using namespace torch::indexing;
 
 class Linear : public BaseLayer {
 public:
-    Linear(int inFeatures, int outFeatures, WeightInitializer weightInitializer = He(), WeightInitializer biasInitializer = Constant())
+    Linear(int inFeatures, int outFeatures, WeightInitializer* weightInitializer, WeightInitializer* biasInitializer)
             : inFeatures(inFeatures), outFeatures(outFeatures) {
         trainable = true;
         initializable = true;
@@ -29,8 +29,8 @@ public:
         weights = torch::empty({inFeatures, outFeatures}, torch::kCUDA);
         bias = torch::empty({1, outFeatures}, torch::kCUDA);
 
-        weightInitializer.initialize(weights, inFeatures, outFeatures);
-        biasInitializer.initialize(bias, 1, outFeatures);
+        weightInitializer->initialize(weights, inFeatures, outFeatures);
+        biasInitializer->initialize(bias, 1, outFeatures);
 
         weights = torch::cat({weights, bias}, 0);
     }
@@ -48,7 +48,7 @@ public:
         gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 
 
-        weights = optimizer.update(weights, gradientWeights);
+        weights = optimizer->update(weights, gradientWeights);
 
         auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inFeatures)});
 
@@ -62,8 +62,8 @@ public:
     torch::Tensor weights;
     torch::Tensor gradientWeights;
 
-    WeightInitializer weightInitializer;
-    WeightInitializer biasInitializer;
+    WeightInitializer* weightInitializer;
+    WeightInitializer* biasInitializer;
 
     torch::Tensor bias;
     torch::Tensor gradientBias;
@@ -73,6 +73,6 @@ public:
     int batchSize;
 
 public:
-    Optimizer optimizer;
+    Optimizer* optimizer;
 };
 
