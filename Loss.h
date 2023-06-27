@@ -2,16 +2,21 @@
 
 #include <iostream>
 #include <torch/torch.h>
-#include "Base.h"
 
-class CrossEntropyLoss : public BaseLayer
+class Loss {
+    public:
+    Loss(){}
+    virtual float forward(torch::Tensor &y_hat, torch::Tensor &y) = 0;
+    virtual torch::Tensor backward(torch::Tensor &grad_y)= 0;
+
+};
+
+class CrossEntropyLoss: public Loss
 {
 public:
     CrossEntropyLoss(float epsilon = 1e-09)
     {
         this->epsilon = epsilon;
-        trainable = false;
-        initializable = false;
     }
 
     float forward(torch::Tensor &y_hat, torch::Tensor &y) override
