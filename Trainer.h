@@ -5,11 +5,12 @@
 #include "vector"
 #include "tuple"
 #include "iostream"
+#include "Loss.h"
 
 
 class Trainer {
 public:
-    Trainer(Network network, Dataset trainData, Dataset valData, BaseLayer loss, int batchSize) : network(network),
+    Trainer(Network network, Dataset trainData, Dataset valData, Loss* loss, int batchSize) : network(network),
                                                                                                   loss(loss),
                                                                                                   trainData(trainData),
                                                                                                   valData(valData),
@@ -18,9 +19,9 @@ public:
 
     std::tuple<float, torch::Tensor> trainStep(torch::Tensor &x, torch::Tensor &y) {
         torch::Tensor output = network.forward(x);
-        float loss = this->loss.forward(output, y);
+        float loss = this->loss->forward(output, y);
 
-        y = this->loss.backward(y);
+        y = this->loss->backward(y);
         network.backward(y);
 
         return {loss, output};
@@ -28,7 +29,7 @@ public:
 
     std::tuple<float, torch::Tensor> valStep(torch::Tensor &x, torch::Tensor &y) {
         torch::Tensor output = network.forward(x);
-        float loss = this->loss.forward(output, y);
+        float loss = this->loss->forward(output, y);
         return {loss, output};
     }
 
@@ -38,12 +39,16 @@ public:
         std::vector <torch::Tensor> runningPreds;
         float runningLoss = 0.0;
 
+        std::cout << "batch size:" << batchSize << "\n";
+
         auto trainLoader = torch::data::make_data_loader(std::move(trainData),
                                                     torch::data::DataLoaderOptions().batch_size(batchSize));
         torch::Tensor x, y;
         for (auto &batch: *trainLoader) {
             x = batch.data()->data.to(torch::kCUDA);
             y = batch.data()->target.to(torch::kCUDA);
+
+            std::cout << "in batch" << x.sizes() << "\n";
 
             auto [batchLoss, preds] = trainStep(x, y);
 
@@ -113,7 +118,7 @@ public:
 
 private:
     Network network;
-    BaseLayer loss;
+    Loss* loss;
     Dataset trainData;
     Dataset valData;
     int batchSize;
