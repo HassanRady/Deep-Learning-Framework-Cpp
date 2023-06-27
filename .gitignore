@@ -191,3 +191,5 @@ build/*
 main.cpp
 example*.cpp
 run.txt
+data/*
+archive/*
