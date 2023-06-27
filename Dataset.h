@@ -32,10 +32,10 @@ std::tuple<std::vector<string>, std::vector<string>, std::vector<string>> readDa
     return {classes, imgs, labels};
 }
 
-torch::Tensor read_data(std::string loc)
+torch::Tensor readData(std::string loc, int channels)
 {
     cv::Mat img = cv::imread(loc);
-    torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, 3}, torch::kByte);
+    torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, channels}, torch::kByte);
     img_tensor = img_tensor.permute({2, 0, 1});
 
     return img_tensor.clone();
@@ -47,12 +47,12 @@ torch::Tensor read_label(int label)
     return label_tensor.clone();
 }
 
-vector<torch::Tensor> process_images(vector<string> list_images)
+vector<torch::Tensor> process_images(vector<string> list_images, int channels)
 {
     vector<torch::Tensor> states;
     for (std::vector<string>::iterator it = list_images.begin(); it != list_images.end(); ++it)
     {
-        torch::Tensor img = read_data(*it);
+        torch::Tensor img = readData(*it, channels);
         states.push_back(img);
     }
     return states;
@@ -75,13 +75,13 @@ public:
     vector<torch::Tensor> images, labels;
     vector<string> classes;
 
-    Dataset(std::string path)
+    Dataset(std::string path, int channels=3)
     {
         auto [classes, listImages, listLabels] = readDatasetDir(path);
 
         this->classes = classes;
 
-        images = process_images(listImages);
+        images = process_images(listImages, channels);
         labels = process_labels(listLabels);
     };
 
