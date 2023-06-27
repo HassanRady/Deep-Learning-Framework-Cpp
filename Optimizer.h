@@ -8,9 +8,7 @@ public:
 
     Optimizer(double learningRate) : learningRate(learningRate) {}
 
-    virtual torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) {
-        return weightTensor;
-    };
+    virtual torch::Tensor &update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) = 0;
 
 protected:
     double learningRate;
