@@ -8,9 +8,11 @@
 #include "Loss.h"
 
 
+using mappedDataset = torch::data::datasets::MapDataset<Dataset, torch::data::transforms::Stack<torch::data::Example<>>>;
+
 class Trainer {
 public:
-    Trainer(Network network, Dataset trainData, Dataset valData, Loss* loss, int batchSize) : network(network),
+    Trainer(Network network, mappedDataset trainData, mappedDataset valData, Loss* loss, int batchSize) : network(network),
                                                                                                   loss(loss),
                                                                                                   trainData(trainData),
                                                                                                   valData(valData),
@@ -39,16 +41,12 @@ public:
         std::vector <torch::Tensor> runningPreds;
         float runningLoss = 0.0;
 
-        std::cout << "batch size:" << batchSize << "\n";
-
         auto trainLoader = torch::data::make_data_loader(std::move(trainData),
                                                     torch::data::DataLoaderOptions().batch_size(batchSize));
         torch::Tensor x, y;
         for (auto &batch: *trainLoader) {
-            x = batch.data()->data.to(torch::kCUDA);
-            y = batch.data()->target.to(torch::kCUDA);
-
-            std::cout << "in batch" << x.sizes() << "\n";
+            x = batch.data.to(torch::kCUDA);
+            y = batch.target.to(torch::kCUDA);
 
             auto [batchLoss, preds] = trainStep(x, y);
 
@@ -74,8 +72,8 @@ public:
                                                   torch::data::DataLoaderOptions().batch_size(batchSize));
         torch::Tensor x, y;
         for (auto &batch: *valLoader) {
-            x = batch.data()->data.to(torch::kCUDA);
-            y = batch.data()->target.to(torch::kCUDA);
+            x = batch.data.to(torch::kCUDA);
+            y = batch.target.to(torch::kCUDA);
 
             auto [batchLoss, preds] = valStep(x, y);
 
@@ -119,8 +117,8 @@ public:
 private:
     Network network;
     Loss* loss;
-    Dataset trainData;
-    Dataset valData;
+    mappedDataset trainData;
+    mappedDataset valData;
     int batchSize;
 
 };
