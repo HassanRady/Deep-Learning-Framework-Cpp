@@ -189,7 +189,7 @@ Libraries/*
 build/*
 
 main.cpp
-example*.cpp
+example2.cpp
 run.txt
 data/*
 archive/*
