@@ -17,6 +17,7 @@ public:
             denseFeatures *= inputTensorDims[dim];
         }
         auto flattenTensor = inputTensor.reshape({inputTensor.sizes()[0], inputTensor.sizes()[1] * inputTensor.sizes()[2] * inputTensor.sizes()[3]});
+        std::cout << flattenTensor.sizes() << "\n";
         return flattenTensor;
     }
 

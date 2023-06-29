@@ -87,9 +87,9 @@ public:
 
     torch::data::Example<> get(size_t index) override
     {
-        torch::Tensor sample_img = images.at(index);
+        torch::Tensor sampleImg = images.at(index);
         torch::Tensor sample_label = labels.at(index);
-        return {sample_img.clone(), sample_label.clone()};
+        return {sampleImg.clone(), sample_label.clone()};
     };
 
     torch::optional<size_t> size() const override
