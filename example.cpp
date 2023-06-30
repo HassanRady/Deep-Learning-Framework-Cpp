@@ -27,8 +27,8 @@ int main() {
     auto batchSize = 16;
     auto inChannels = 1;
     auto filterSize = 3;
-    auto outChannels = 64;
-    auto stride = 2;
+    auto outChannels = 16;
+    auto stride = 1;
     auto padding = "same";
     auto classes = 10;
 
@@ -46,7 +46,7 @@ int main() {
     ReLU relu2;
     ReLU relu3;
     Flatten flatten;
-    Linear fc1(4*7*7, 32, &wInit, &bInit);
+    Linear fc1(outChannels*7*7, 32, &wInit, &bInit);
     Linear fc2(32, classes, &wInit, &bInit);
     SoftMax softmax;
 
