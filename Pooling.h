@@ -56,7 +56,6 @@ public:
                 }
             }
         }
-        std::cout << output.sizes() << "\n";
         return output;
     }
 
