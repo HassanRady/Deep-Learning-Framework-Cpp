@@ -69,6 +69,12 @@ vector<torch::Tensor> process_labels(vector<string> list_labels)
     return labels;
 }
 
+torch::Tensor toOneHotEncoding(torch::Tensor& labels, int numClasses){
+    torch::Tensor identity = torch::eye(numClasses);
+    torch::Tensor oneHot = identity.index_select(0, labels);
+    return oneHot;
+}
+
 class Dataset : public torch::data::datasets::Dataset<Dataset>
 {
 public:
@@ -89,7 +95,8 @@ public:
     {
         torch::Tensor sampleImg = images.at(index);
         torch::Tensor sample_label = labels.at(index);
-        return {sampleImg.clone(), sample_label.clone()};
+        torch::Tensor oneHotLabel = toOneHotEncoding(sample_label, classes.size());
+        return {sampleImg.clone(), oneHotLabel.clone()};
     };
 
     torch::optional<size_t> size() const override
