@@ -203,7 +203,7 @@ public:
             }
             backwardOutput.index_put_({n}, removePad(gradInput.index({n})));
         }
-        weights = optimizer->update(weights, gradWeight);
+        optimizer->update(weights, gradWeight);
         return backwardOutput;
     }
 

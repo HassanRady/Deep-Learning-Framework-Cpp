@@ -69,8 +69,8 @@ public:
                      (batchSize * gradientInputNormalized - gradientInputNormalized.sum({0})) -
                      inputTensorNormalized * torch::sum(gradientInputNormalized * inputTensorNormalized, {0}));
 
-        weight = optimizer->update(weight, gradientWeight);
-        bias = optimizer->update(bias, gradientBias);
+        optimizer->update(weight, gradientWeight);
+        optimizer->update(bias, gradientBias);
 
         return gradientInputTensor;
     }

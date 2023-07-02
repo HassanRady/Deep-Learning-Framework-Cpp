@@ -47,15 +47,14 @@ public:
 
         gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 
-
-        weights = optimizer->update(weights, gradientWeights);
+        optimizer->update(weights, gradientWeights);
 
         auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inFeatures)});
 
         return out;
     }
 
-public:
+private:
     int inFeatures;
     int outFeatures;
 
@@ -72,7 +71,6 @@ public:
 
     int batchSize;
 
-public:
     Optimizer* optimizer;
 };
 
