@@ -9,43 +9,52 @@
 #include "Base.h"
 #include "Optimizer.h"
 
-class Network {
+class Network
+{
 public:
-    Network(std::vector<BaseLayer*> layers): layers(layers) {}
+    Network(std::vector<BaseLayer *> layers) : layers(layers) {}
 
-    void append(BaseLayer* layer) {
+    void append(BaseLayer *layer)
+    {
         layers.push_back(layer);
     }
 
-    torch::Tensor forward(torch::Tensor x) {
-        for (auto layer: layers)
+    torch::Tensor forward(torch::Tensor x)
+    {
+        for (auto layer : layers)
             x = layer->forward(x);
         return x;
     }
 
-    void backward(torch::Tensor y) {
+    void backward(torch::Tensor y)
+    {
         for (int i = layers.size() - 1; i >= 0; --i)
             y = layers[i]->backward(y);
     }
 
-    void setOptimizer(Optimizer* optimizer) {
-        for (auto layer: layers) {
-            if (layer->trainable)
-                // TODO check if its a deep copy
-                layer->optimizer = optimizer;
+    void setOptimizer(Optimizer *optimizer)
+    {
+        for (int i = 0; i < layers.size(); ++i)
+        {
+            if (layers[i]->trainable)
+            {
+                layers[i]->optimizer = new Adam();
+            }
         }
     }
 
-    void eval() {
-        for (auto layer: layers)
+    void eval()
+    {
+        for (auto layer : layers)
             layer->eval();
     }
 
-    void train() {
-        for (auto layer: layers)
+    void train()
+    {
+        for (auto layer : layers)
             layer->train();
     }
 
 private:
-    std::vector <BaseLayer*> layers;
+    std::vector<BaseLayer *> layers;
 };
