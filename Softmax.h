@@ -21,7 +21,7 @@ public:
         return softmaxOutput;
     }
 
-    torch::Tensor backward(torch::Tensor & y) override{
+    torch::Tensor backward(torch::Tensor& y) override{
         const auto batch_size = softmaxOutput.size(0);
         const auto num_classes = softmaxOutput.size(1);
         auto jacobian = torch::zeros({batch_size, num_classes, num_classes}, torch::kCUDA);
