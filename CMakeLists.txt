@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(DeepStorm)
 
+# set(CUDACXX "/usr/local/cuda/bin/nvcc")
+set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libtorch")
+
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
 
