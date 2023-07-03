@@ -36,6 +36,7 @@ public:
     }
 
     torch::Tensor forward(torch::Tensor &inputTensor) override{
+        // std::cout << optimizer->learningRate << "\n";
         auto inputDims = inputTensor.sizes();
         batchSize = inputDims[0];
 
@@ -54,6 +55,7 @@ public:
         return out;
     }
 
+    Optimizer* optimizer;
 private:
     int inFeatures;
     int outFeatures;
@@ -70,7 +72,5 @@ private:
     torch::Tensor inputTensor;
 
     int batchSize;
-
-    Optimizer* optimizer;
 };
 

@@ -208,10 +208,9 @@ public:
     }
 
 
+    Optimizer* optimizer;
 private:
     int batchSize;
-
-    Optimizer* optimizer;
 
     int inChannels;
     int outChannels;
