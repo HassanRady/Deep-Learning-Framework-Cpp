@@ -34,11 +34,11 @@ public:
 
     void setOptimizer(Optimizer *optimizer)
     {
-        for (int i = 0; i < layers.size(); ++i)
+        for (iter=layers.begin();iter != layers.end();iter++)
         {
-            if (layers[i]->trainable)
+            if ((*iter)->trainable)
             {
-                layers[i]->optimizer = new Adam();
+                (*iter)->optimizer = new Adam();
             }
         }
     }
@@ -57,4 +57,6 @@ public:
 
 private:
     std::vector<BaseLayer *> layers;
+    std::vector<BaseLayer*>::iterator iter;
+
 };
