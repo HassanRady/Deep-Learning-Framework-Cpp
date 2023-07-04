@@ -6,8 +6,16 @@
 #include "opencv4/opencv2/opencv.hpp"
 #include "string"
 #include "filesystem"
+#include "random"
+
+// std::srand(42);
 
 using namespace std;
+
+struct Example
+{
+    std::string x, y;
+};
 
 std::vector<std::string> readImgDir(std::string path)
 {
@@ -17,19 +25,25 @@ std::vector<std::string> readImgDir(std::string path)
     return imgs;
 }
 
-std::tuple<std::vector<string>, std::vector<string>, std::vector<string>> readDatasetDir(std::string path)
+std::tuple<std::vector<string>, std::vector<Example>> readDatasetDir(std::string path)
 {
     vector<string> classes, imgs, labels;
+    std::vector<Example> examples;
     for (const auto &entry : std::filesystem::directory_iterator(path))
     {
         classes.push_back(entry.path().filename());
         for (const auto &file : std::filesystem::directory_iterator(entry))
         {
-            imgs.push_back(file.path());
-            labels.push_back(entry.path().filename());
+            // imgs.push_back(file.path());
+            // labels.push_back(entry.path().filename());
+
+            Example example;
+            example.x = file.path();
+            example.y = entry.path().filename();
+            examples.push_back(example);
         }
     }
-    return {classes, imgs, labels};
+    return {classes, examples};
 }
 
 torch::Tensor readData(std::string loc, int channels)
@@ -69,10 +83,26 @@ vector<torch::Tensor> process_labels(vector<string> list_labels)
     return labels;
 }
 
-torch::Tensor toOneHotEncoding(torch::Tensor& labels, int numClasses){
+torch::Tensor toOneHotEncoding(torch::Tensor &labels, int numClasses)
+{
     torch::Tensor identity = torch::eye(numClasses);
     torch::Tensor oneHot = identity.index_select(0, labels);
-    return oneHot;
+    return oneHot.squeeze_();
+}
+
+std::tuple<std::vector<std::string>, std::vector<std::string>> shuffle(std::vector<Example> &examples, unsigned seed)
+{
+    std::srand(seed);
+    std::random_shuffle(examples.begin(), examples.end());
+
+    std::vector<std::string> xs, ys;
+
+    for (int i = 0; i < examples.size(); ++i)
+    {
+        xs.push_back(examples[i].x);
+        ys.push_back(examples[i].y);
+    }
+    return {xs, ys};
 }
 
 class Dataset : public torch::data::datasets::Dataset<Dataset>
@@ -81,14 +111,15 @@ public:
     vector<torch::Tensor> images, labels;
     vector<string> classes;
 
-    Dataset(std::string path, int channels=3)
+    Dataset(std::string path, int channels = 3, unsigned seed=42)
     {
-        auto [classes, listImages, listLabels] = readDatasetDir(path);
-
+        auto [classes, examples] = readDatasetDir(path);
         this->classes = classes;
 
-        images = process_images(listImages, channels);
-        labels = process_labels(listLabels);
+        auto [xs, ys] = shuffle(examples, (unsigned) seed);
+
+        images = process_images(xs, channels);
+        labels = process_labels(ys);
     };
 
     torch::data::Example<> get(size_t index) override
@@ -103,4 +134,13 @@ public:
     {
         return labels.size();
     };
+
+    void resize(int size)
+    {
+        if (size <= labels.size())
+        {
+            images = std::vector<torch::Tensor>(images.begin(), images.begin() + size);
+            labels = std::vector<torch::Tensor>(labels.begin(), labels.begin() + size);
+        }
+    }
 };
