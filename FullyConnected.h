@@ -45,11 +45,10 @@ public:
     }
 
     torch::Tensor backward(torch::Tensor &errorTensor) override{
-
         gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 
         optimizer->update(weights, gradientWeights);
-
+        
         auto out = torch::matmul(errorTensor, weights.transpose(1, 0)).index({Slice(), Slice(0, inFeatures)});
 
         return out;
