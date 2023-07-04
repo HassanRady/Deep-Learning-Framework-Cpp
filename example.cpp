@@ -24,7 +24,7 @@ using namespace std;
 
 int main() {
 
-    auto batchSize = 16;
+    auto batchSize = 2;
     auto inChannels = 1;
     auto filterSize = 3;
     auto outChannels = 16;
@@ -70,13 +70,22 @@ int main() {
         &softmax
     });
 
-    model.setOptimizer(&optimizer);
+    // model.setOptimizer(&optimizer);
+    conv1.optimizer = new Adam();
+    conv2.optimizer = new Adam();
+    batchNorm1.optimizer = new Adam();
+    batchNorm2.optimizer = new Adam();
+    fc1.optimizer = new Adam();
+    fc2.optimizer = new Adam();
 
+    auto trainset = Dataset ("./data/trainset", 1, (unsigned) 1);
+    auto valset = Dataset ("./data/trainset", 1);
 
-    auto trainset = Dataset ("./data/trainset", 1).map(torch::data::transforms::Stack<>());
-    auto valset = Dataset ("./data/trainset", 1).map(torch::data::transforms::Stack<>());
+    trainset.resize(12);
+    valset.resize(2);
 
    auto trainer = Trainer(model, trainset, valset, &loss, batchSize);
 
-   auto [x, y] = trainer.fit(10);
+   auto [x, y] = trainer.fit(5);
+
 }
