@@ -75,6 +75,7 @@ public:
         return gradientInputTensor;
     }
 
+    Optimizer* optimizer;
 private:
     int batchSize;
 
@@ -90,6 +91,4 @@ private:
 
     torch::Tensor inputTensor;
     torch::Tensor inputTensorNormalized;
-
-    Optimizer* optimizer;
 };
