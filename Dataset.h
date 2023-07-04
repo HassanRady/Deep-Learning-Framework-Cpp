@@ -8,8 +8,6 @@
 #include "filesystem"
 #include "random"
 
-// std::srand(42);
-
 using namespace std;
 
 struct Example
@@ -34,9 +32,6 @@ std::tuple<std::vector<string>, std::vector<Example>> readDatasetDir(std::string
         classes.push_back(entry.path().filename());
         for (const auto &file : std::filesystem::directory_iterator(entry))
         {
-            // imgs.push_back(file.path());
-            // labels.push_back(entry.path().filename());
-
             Example example;
             example.x = file.path();
             example.y = entry.path().filename();
