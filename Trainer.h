@@ -16,7 +16,7 @@ public:
                                                                                                   batchSize(
                                                                                                           batchSize) {}
 
-    std::tuple<float, torch::Tensor> trainStep(torch::Tensor &x, torch::Tensor &y) {
+    std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y) {
         torch::Tensor output = network.forward(x);
         float loss = this->loss->forward(output, y);
 
@@ -45,7 +45,7 @@ public:
             x = batch.data.to(torch::kCUDA);
             y = batch.target.to(torch::kCUDA);
 
-            auto [batchLoss, preds] = trainStep(x, y);
+            auto [batchLoss, preds] = trainBatch(x, y);
 
             runningLoss += batchLoss;
             runningPreds.push_back(preds);
