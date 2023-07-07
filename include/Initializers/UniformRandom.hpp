@@ -11,6 +11,7 @@ namespace DeepStorm
         class UniformRandom : public WeightInitializer
         {
         public:
+            UniformRandom();
             void initialize(torch::Tensor &tensor, int fanIn, int fanOut) override;
         };
     } // namespace Initializers
