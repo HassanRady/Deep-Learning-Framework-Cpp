@@ -7,10 +7,10 @@ ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
     auto [classes, examples] = readDatasetDir(path);
     this->classes = classes;
 
-    auto [xs, ys] = shuffle(examples, (unsigned)seed);
+    auto [xs, ys] = ImgDataset::shuffle(examples, (unsigned)seed);
 
-    images = process_images(xs, channels);
-    labels = process_labels(ys);
+    ImgDataset::images = process_images(xs, channels);
+    ImgDataset::labels = process_labels(ys);
 };
 
 struct Example
@@ -20,15 +20,15 @@ struct Example
 
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
 {
-    vector<string> imgs;
+    std::vector<std::string> imgs;
     for (const auto &entry : std::filesystem::directory_iterator(path))
         imgs.push_back(entry.path());
     return imgs;
 }
 
-std::tuple<std::vector<string>, std::vector<Example>> ImgDataset::readDatasetDir(std::string path)
+std::tuple<std::vector<std::string>, std::vector<Example>> ImgDataset::readDatasetDir(std::string path)
 {
-    vector<string> classes, imgs, labels;
+    std::vector<std::string> classes, imgs, labels;
     std::vector<Example> examples;
     for (const auto &entry : std::filesystem::directory_iterator(path))
     {
@@ -59,10 +59,10 @@ torch::Tensor ImgDataset::read_label(int label)
     return label_tensor.clone();
 }
 
-vector<torch::Tensor> ImgDataset::process_images(vector<string> list_images, int channels)
+std::vector<torch::Tensor> ImgDataset::process_images(std::vector<std::string> list_images, int channels)
 {
-    vector<torch::Tensor> states;
-    for (std::vector<string>::iterator it = list_images.begin(); it != list_images.end(); ++it)
+    std::vector<torch::Tensor> states;
+    for (std::vector<std::string>::iterator it = list_images.begin(); it != list_images.end(); ++it)
     {
         torch::Tensor img = readData(*it, channels);
         states.push_back(img);
@@ -70,10 +70,10 @@ vector<torch::Tensor> ImgDataset::process_images(vector<string> list_images, int
     return states;
 }
 
-vector<torch::Tensor> ImgDataset::process_labels(vector<string> list_labels)
+std::vector<torch::Tensor> ImgDataset::process_labels(std::vector<std::string> list_labels)
 {
-    vector<torch::Tensor> labels;
-    for (std::vector<string>::iterator it = list_labels.begin(); it != list_labels.end(); ++it)
+    std::vector<torch::Tensor> labels;
+    for (std::vector<std::string>::iterator it = list_labels.begin(); it != list_labels.end(); ++it)
     {
         torch::Tensor label = read_label(stoi(*it));
         labels.push_back(label);
@@ -105,22 +105,23 @@ std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuff
 
 torch::data::Example<> ImgDataset::get(size_t index) 
 {
-    torch::Tensor sampleImg = images.at(index);
-    torch::Tensor sample_label = labels.at(index);
+    torch::Tensor sampleImg = ImgDataset::images.at(index);
+    torch::Tensor sample_label = ImgDataset::labels.at(index);
     torch::Tensor oneHotLabel = toOneHotEncoding(sample_label, classes.size());
     return {sampleImg.clone(), oneHotLabel.clone()};
 };
 
 torch::optional<size_t> ImgDataset::size() const 
 {
-    return labels.size();
+    return ImgDataset::labels.size();
 };
 
 void ImgDataset::resize(int size)
 {
-    if (size <= labels.size())
+    if (size <= ImgDataset::labels.size())
     {
-        images = std::vector<torch::Tensor>(images.begin(), images.begin() + size);
+        ImgDataset::images = std::vector<torch::Tensor>(images.begin(), images.begin() + size);
         labels = std::vector<torch::Tensor>(labels.begin(), labels.begin() + size);
     }
 }
+
