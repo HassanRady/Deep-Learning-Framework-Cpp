@@ -1,18 +1,25 @@
-#include "torch/torch.hpp"
+#include "SGD.hpp"
 
 using namespace DeepStorm::Optimizers;
 
-Sgd::Sgd() {}
-
-void Sgd::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) 
+Sgd::Sgd(double learningRate = 1e-3)
 {
-    weightTensor = weightTensor - learningRate * gradientTensor;
+    Sgd::learningRate = learningRate;
 }
 
-SgdWithMomentum::SgdWithMomentum(double learningRate, double momentum) : Optimizer(learningRate), momentum(momentum) {}
-
-void SgdWithMomentum::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) 
+void Sgd::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
-    v = momentum * v - learningRate * gradientTensor;
+    weightTensor = weightTensor - Sgd::learningRate * gradientTensor;
+}
+
+SgdWithMomentum::SgdWithMomentum(double learningRate, double momentum)
+{
+    SgdWithMomentum::learningRate = learningRate;
+    SgdWithMomentum::momentum = momentum;
+}
+
+void SgdWithMomentum::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
+{
+    v = SgdWithMomentum::momentum * v - SgdWithMomentum::learningRate * gradientTensor;
     weightTensor = weightTensor + v;
 }

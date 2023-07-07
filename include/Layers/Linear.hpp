@@ -4,6 +4,7 @@
 #include "iostream"
 
 #include "Layer.hpp"
+#include "WeightInitializer.hpp"
 
 namespace DeepStorm
 {

@@ -6,11 +6,11 @@ Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelS
        std::string padding,
        WeightInitializer *weightInitializer, WeightInitializer *biasInitializer)
 {
-    trainable = true;
-    initializable = true;
+    Conv2d::trainable = true;
+    Conv2d::initializable = true;
 
-    this->inChannels = inChannels;
-    this->outChannels = outChannels;
+    Conv2d::inChannels = inChannels;
+    Conv2d::outChannels = outChannels;
 
     kernelSizeDim1 = kernelSize->operator[](0);
     kernelSizeDim2 = kernelSize->operator[](1);
@@ -18,10 +18,10 @@ Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelS
     strideDim1 = stride->operator[](0);
     strideDim2 = stride->operator[](1);
 
-    this->padding = padding;
+    Conv2d::padding = padding;
 
-    this->weightInitializer = weightInitializer;
-    this->biasInitializer = biasInitializer;
+    Conv2d::weightInitializer = weightInitializer;
+    Conv2d::biasInitializer = biasInitializer;
 
     initialize();
 }
@@ -125,7 +125,7 @@ torch::Tensor Conv2d::convolve(torch::Tensor &slice, torch::Tensor &kernel, torc
 
 torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) 
 {
-    this->inputTensor = inputTensor;
+    Conv2d::inputTensor = inputTensor;
     batchSize = inputTensor.sizes()[0];
     auto inputSizeDim1 = inputTensor.sizes()[2];
     auto inputSizeDim2 = inputTensor.sizes()[3];
@@ -141,7 +141,7 @@ torch::Tensor Conv2d::forward(torch::Tensor &inputTensor)
         for (int outChannel = 0; outChannel < outChannels; ++outChannel)
         {
             torch::Tensor kernel = weights.index({outChannel});
-            torch::Tensor bias = this->bias.index({outChannel});
+            torch::Tensor bias = Conv2d::bias.index({outChannel});
 
             for (int i = 0; i < outputSizeDim1; ++i)
             {

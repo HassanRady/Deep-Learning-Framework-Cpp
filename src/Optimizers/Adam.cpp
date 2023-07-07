@@ -2,12 +2,15 @@
 
 using namespace DeepStorm::Optimizers;
 
-Adam::Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, double epsilon = 1e-07) : Optimizer(
-                                                                                                         learningRate),
-                                                                                                     mu(mu), rho(rho),
-                                                                                                     epsilon(epsilon) {}
+Adam::Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, double epsilon = 1e-07)
+{
+    Adam::learningRate = learningRate;
+    Adam::mu = mu;
+    Adam::rho = rho;
+    Adam::epsilon = epsilon; 
+}
 
-void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) 
+void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
     k = k + 1;
 
