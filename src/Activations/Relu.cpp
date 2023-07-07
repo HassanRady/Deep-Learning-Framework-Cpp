@@ -2,15 +2,15 @@
 
 using namespace DeepStorm::Activations;
 
-Relu::Relu() {}
+ReLU::ReLU() {}
 
-torch::Tensor Relu::forward(torch::Tensor &x)
+torch::Tensor ReLU::forward(torch::Tensor &x)
 {
     pos = x.greater_(0);
     return torch::max(x, torch::zeros_like(x, torch::kCUDA));
 }
 
-torch::Tensor Relu::backward(torch::Tensor &y)
+torch::Tensor ReLU::backward(torch::Tensor &y)
 {
-    return pos * y;
+    return ReLU::pos * y;
 }
