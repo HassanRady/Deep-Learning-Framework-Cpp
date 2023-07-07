@@ -13,10 +13,10 @@ ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
     ImgDataset::labels = process_labels(ys);
 };
 
-struct Example
-{
-    std::string x, y;
-};
+// struct Example
+// {
+//     std::string x, y;
+// };
 
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
 {
@@ -26,7 +26,7 @@ std::vector<std::string> ImgDataset::readImgDir(std::string path)
     return imgs;
 }
 
-std::tuple<std::vector<std::string>, std::vector<Example>> ImgDataset::readDatasetDir(std::string path)
+std::tuple<std::vector<std::string>, std::vector<ImgDataset::Example>> ImgDataset::readDatasetDir(std::string path)
 {
     std::vector<std::string> classes, imgs, labels;
     std::vector<Example> examples;
