@@ -12,7 +12,7 @@ namespace DeepStorm
         class Adam : public Optimizer
         {
         public:
-            Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, double epsilon = 1e-07);
+            Adam(double learningRate, double mu, double rho, double epsilon);
 
             void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
 

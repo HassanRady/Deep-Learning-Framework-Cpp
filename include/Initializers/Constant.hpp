@@ -11,7 +11,7 @@ namespace DeepStorm
         class Constant : public WeightInitializer
         {
             public:
-            Constant(float scalar = 0.1);
+            Constant(float scalar);
 
             void initialize(torch::Tensor &tensor, int fanIn, int fanOut) override;
 

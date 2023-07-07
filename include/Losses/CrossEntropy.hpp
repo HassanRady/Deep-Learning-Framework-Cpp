@@ -11,7 +11,7 @@ namespace DeepStorm
         class CrossEntropyLoss : public Loss
         {
             public:
-            CrossEntropyLoss(float epsilon = 1e-09);
+            CrossEntropyLoss(float epsilon);
 
             float forward(torch::Tensor &y_hat, torch::Tensor &y) override;
 

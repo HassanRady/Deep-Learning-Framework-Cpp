@@ -12,7 +12,7 @@ namespace DeepStorm
         class Dropout : public Layer
         {
         public:
-            Dropout(float probability = 0.5);
+            Dropout(float probability);
 
             torch::Tensor forward(torch::Tensor &inputTensor) override;
 

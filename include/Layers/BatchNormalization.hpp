@@ -13,7 +13,7 @@ namespace DeepStorm
         class BatchNorm2d : public Layer
         {
         public:
-            BatchNorm2d(int numFeatures, float eps = 1e-11, float momentum = 0.8);
+            BatchNorm2d(int numFeatures, float eps, float momentum);
 
             torch::Tensor normalizeTrain(torch::Tensor &tensor);
 
