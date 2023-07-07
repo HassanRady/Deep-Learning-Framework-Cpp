@@ -11,8 +11,9 @@ namespace DeepStorm
         class He : public WeightInitializer
         {
         public:
+            He();
             void initialize(torch::Tensor &tensor, int fanIn, int fanOut) override;
-            ~He(){}
+            ~He() = default;
         };
     } // namespace Initializers
 
