@@ -2,7 +2,7 @@
 
 #include "torch/torch.h"
 
-#include "Layer.h"
+#include "Layer.hpp"
 
 namespace DeepStorm
 {

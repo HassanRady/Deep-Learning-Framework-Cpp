@@ -3,7 +3,7 @@
 #include "torch/torch.h"
 #include "iostream"
 
-#include "Optimizer.h"
+#include "Optimizer.hpp"
 
 namespace DeepStorm
 {

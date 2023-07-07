@@ -2,7 +2,7 @@
 
 #include "torch/torch.h"
 
-#include "WeightInitializer.h"
+#include "WeightInitializer.hpp"
 
 namespace DeepStorm
 {
@@ -12,6 +12,7 @@ namespace DeepStorm
         {
         public:
             void initialize(torch::Tensor &tensor, int fanIn, int fanOut) override;
+            ~He(){}
         };
     } // namespace Initializers
 

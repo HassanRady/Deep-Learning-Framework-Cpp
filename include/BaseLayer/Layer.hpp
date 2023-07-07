@@ -1,7 +1,7 @@
 #pragma once
 
 #include "torch/torch.h"
-#include "Optimizer.h"
+#include "Optimizer.hpp"
 
 namespace DeepStorm
 {

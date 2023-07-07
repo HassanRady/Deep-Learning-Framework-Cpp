@@ -5,9 +5,9 @@
 #include "string"
 #include "vector"
 
-#include "Layer.h"
-#include "Initializers.h"
-#include "Optimizer.h"
+#include "Layer.hpp"
+#include "WeightInitializer.hpp"
+#include "Optimizer.hpp"
 
 namespace DeepStorm
 {

@@ -6,13 +6,16 @@
 #include "string"
 #include "tuple"
 
-#include "Layer.h"
-#include "Optimizer.h"
+#include "Layer.hpp"
+#include "Optimizer.hpp"
 
 namespace DeepStorm
 {
     class Model
     {
+    public:
+        Model();
+
         Model(std::vector<Layer *> layers);
 
         void append(Layer *layer);

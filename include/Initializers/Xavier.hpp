@@ -2,7 +2,7 @@
 
 #include "torch/torch.h"
 
-#include "WeightInitializer.h"
+#include "WeightInitializer.hpp"
 
 namespace DeepStorm
 {
