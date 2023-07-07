@@ -12,6 +12,14 @@ namespace DeepStorm
 
         virtual torch::Tensor backward(torch::Tensor &tensor) = 0;
 
+        void train() {
+            training = true;
+        }
+
+        void eval() {
+            training = false;
+        }
+
         virtual ~Layer() = default;
 
         bool trainable;
