@@ -12,6 +12,8 @@ namespace DeepStorm
         class Flatten : public Layer
         {
         public:
+            Flatten();
+
             torch::Tensor forward(torch::Tensor &inputTensor) override;
 
             torch::Tensor backward(torch::Tensor &errorTensor) override;
