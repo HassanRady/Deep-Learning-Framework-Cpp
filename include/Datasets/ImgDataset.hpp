@@ -8,11 +8,13 @@
 #include "filesystem"
 #include "random"
 
+#include "Dataset.hpp"
+
 namespace DeepStorm
 {
     namespace Datasets
     {
-        class ImgDataset : public torch::data::datasets::Dataset<ImgDataset>
+        class ImgDataset : public DeepStorm::Dataset
         {
         public:
             struct Example
@@ -22,9 +24,8 @@ namespace DeepStorm
 
             ImgDataset(std::string path, int channels, unsigned seed);
 
-            torch::data::Example<> get(size_t index) override;
+            
 
-            torch::optional<size_t> size() const override;
 
             void resize(int size);
 

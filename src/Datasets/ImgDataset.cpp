@@ -13,11 +13,6 @@ ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
     ImgDataset::labels = process_labels(ys);
 };
 
-// struct Example
-// {
-//     std::string x, y;
-// };
-
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
 {
     std::vector<std::string> imgs;
@@ -81,12 +76,12 @@ std::vector<torch::Tensor> ImgDataset::process_labels(std::vector<std::string> l
     return labels;
 }
 
-torch::Tensor ImgDataset::toOneHotEncoding(torch::Tensor &labels, int numClasses)
-{
-    torch::Tensor identity = torch::eye(numClasses);
-    torch::Tensor oneHot = identity.index_select(0, labels);
-    return oneHot.squeeze_();
-}
+// torch::Tensor ImgDataset::toOneHotEncoding(torch::Tensor &labels, int numClasses)
+// {
+//     torch::Tensor identity = torch::eye(numClasses);
+//     torch::Tensor oneHot = identity.index_select(0, labels);
+//     return oneHot.squeeze_();
+// }
 
 std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuffle(std::vector<Example> &examples, unsigned seed)
 {
@@ -103,18 +98,18 @@ std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuff
     return {xs, ys};
 }
 
-torch::data::Example<> ImgDataset::get(size_t index) 
-{
-    torch::Tensor sampleImg = ImgDataset::images.at(index);
-    torch::Tensor sample_label = ImgDataset::labels.at(index);
-    torch::Tensor oneHotLabel = toOneHotEncoding(sample_label, classes.size());
-    return {sampleImg.clone(), oneHotLabel.clone()};
-};
+// torch::data::Example<> ImgDataset::get(size_t index) 
+// {
+//     torch::Tensor sampleImg = ImgDataset::images.at(index);
+//     torch::Tensor sample_label = ImgDataset::labels.at(index);
+//     torch::Tensor oneHotLabel = toOneHotEncoding(sample_label, classes.size());
+//     return {sampleImg.clone(), oneHotLabel.clone()};
+// };
 
-torch::optional<size_t> ImgDataset::size() const 
-{
-    return ImgDataset::labels.size();
-};
+// torch::optional<size_t> ImgDataset::size() const 
+// {
+//     return ImgDataset::labels.size();
+// };
 
 void ImgDataset::resize(int size)
 {
