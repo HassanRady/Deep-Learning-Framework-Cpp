@@ -2,11 +2,13 @@
 
 using namespace DeepStorm;
 
-Model::Model(std::vector<BaseLayer *> layers) : layers(layers) {}
+Model::Model(std::vector<Layer *> layers){
+    Model::layers = layers;
+}
 
-void Model::append(BaseLayer *layer)
+void Model::append(Layer *layer)
 {
-    layers.emplace_back(layer);
+    Model::layers.emplace_back(layer);
 }
 
 torch::Tensor Model::forward(torch::Tensor x)
