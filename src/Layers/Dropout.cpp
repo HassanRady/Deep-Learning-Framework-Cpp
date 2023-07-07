@@ -4,13 +4,13 @@ using namespace DeepStorm::Layers;
 
 Dropout::Dropout(float probability = 0.5) : probability(probability)
 {
-    trainable = false;
-    initializable = false;
+    Dropout::trainable = false;
+    Dropout::initializable = false;
 }
 
 torch::Tensor Dropout::forward(torch::Tensor &inputTensor) 
 {
-    if (testingPhase)
+    if (Dropout::training)
         return inputTensor;
 
     auto tensorShape = inputTensor.sizes();
