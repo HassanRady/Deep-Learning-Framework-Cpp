@@ -2,39 +2,41 @@
 
 using namespace DeepStorm;
 
-Trainer::Trainer(Network network, Dataset trainData, Dataset valData, Loss *loss, int batchSize) : network(network),
-                                                                                                   loss(loss),
-                                                                                                   trainData(trainData),
-                                                                                                   valData(valData),
-                                                                                                   batchSize(
-                                                                                                       batchSize) {}
+Trainer::Trainer(Model model, Trainer::ImgDataset trainData, Trainer::ImgDataset valData, Loss *loss, int batchSize)
+{
+    Trainer::model = model;
+    Trainer::loss = loss;
+    Trainer::trainData = trainData;
+    Trainer::valData = valData;
+    Trainer::batchSize = batchSize;
+}
 
 std::tuple<float, torch::Tensor> Trainer::trainBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = network.forward(x);
-    float loss = this->loss->forward(output, y);
+    torch::Tensor output = Trainer::model.forward(x);
+    float loss = Trainer::loss->forward(output, y);
 
-    y = this->loss->backward(y);
-    network.backward(y);
+    y = Trainer::loss->backward(y);
+    Trainer::model.backward(y);
 
     return {loss, output};
 }
 
 std::tuple<float, torch::Tensor> Trainer::valStep(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = network.forward(x);
-    float loss = this->loss->forward(output, y);
+    torch::Tensor output = Trainer::model.forward(x);
+    float loss = Trainer::loss->forward(output, y);
     return {loss, output};
 }
 
 std::tuple<float, std::vector<torch::Tensor>> Trainer::trainEpoch()
 {
-    network.train();
+    Trainer::model.train();
 
     std::vector<torch::Tensor> runningPreds;
     float runningLoss = 0.0;
 
-    auto trainLoader = torch::data::make_data_loader(std::move(trainData.map(torch::data::transforms::Stack<>())),
+    auto trainLoader = torch::data::make_data_loader(std::move(Trainer::trainData.map(torch::data::transforms::Stack<>())),
                                                      torch::data::DataLoaderOptions().batch_size(batchSize));
     torch::Tensor x, y;
     for (auto &batch : *trainLoader)
@@ -57,12 +59,12 @@ std::tuple<float, std::vector<torch::Tensor>> Trainer::trainEpoch()
 
 std::tuple<float, std::vector<torch::Tensor>> Trainer::valEpoch()
 {
-    network.eval();
+    Trainer::model.eval();
 
     std::vector<torch::Tensor> runningPreds;
     float runningLoss = 0.0;
 
-    auto valLoader = torch::data::make_data_loader(std::move(valData.map(torch::data::transforms::Stack<>())),
+    auto valLoader = torch::data::make_data_loader(std::move(Trainer::valData.map(torch::data::transforms::Stack<>())),
                                                    torch::data::DataLoaderOptions().batch_size(batchSize));
     torch::Tensor x, y;
     for (auto &batch : *valLoader)
@@ -70,7 +72,7 @@ std::tuple<float, std::vector<torch::Tensor>> Trainer::valEpoch()
         x = batch.data.to(torch::kCUDA);
         y = batch.target.to(torch::kCUDA);
 
-        auto [batchLoss, preds] = valStep(x, y);
+        auto [batchLoss, preds] = Trainer::valStep(x, y);
 
         runningLoss += batchLoss;
         runningPreds.push_back(preds);
