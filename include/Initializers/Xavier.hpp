@@ -8,9 +8,10 @@ namespace DeepStorm
 {
     namespace Initializers
     {
-        class Xavier : public WeighInitializer
+        class Xavier : public WeightInitializer
         {
         public:
+        Xavier();
             void initialize(torch::Tensor &tensor, int fanIn, int fanOut) override;
         };
     } // namespace Initializers
