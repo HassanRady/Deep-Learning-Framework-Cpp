@@ -11,6 +11,7 @@ namespace DeepStorm
         class SoftMax : public Layer
         {
         public:
+            SoftMax();
             torch::Tensor forward(torch::Tensor &x) override;
 
             torch::Tensor backward(torch::Tensor &y) override;
