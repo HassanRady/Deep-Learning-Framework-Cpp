@@ -1,4 +1,4 @@
-#include "Dropout.h"
+#include "Dropout.hpp"
 
 using namespace DeepStorm::Layers;
 

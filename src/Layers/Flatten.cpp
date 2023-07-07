@@ -1,4 +1,4 @@
-#include "Flatten.h"
+#include "Flatten.hpp"
 
 using namespace DeepStorm::Layers;
 

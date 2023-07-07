@@ -1,4 +1,4 @@
-#include "Softmax.h"
+#include "Softmax.hpp"
 
 using namespace DeepStorm::Activations;
 

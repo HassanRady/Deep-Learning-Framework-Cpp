@@ -1,4 +1,4 @@
-#include "Pooling.h"
+#include "Pooling.hpp"
 
 using namespace DeepStorm::Layers;
 

@@ -1,4 +1,4 @@
-#include "BatchNormalization.h"
+#include "BatchNormalization.hpp"
 
 using namespace DeepStorm::Layers;
 

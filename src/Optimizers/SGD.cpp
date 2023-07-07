@@ -1,4 +1,4 @@
-#include "torch/torch.h"
+#include "torch/torch.hpp"
 
 using namespace DeepStorm::Optimizers;
 

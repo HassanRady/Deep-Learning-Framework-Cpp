@@ -1,4 +1,4 @@
-#include "Xavier.h"
+#include "Xavier.hpp"
 
 using namespace DeepStorm::Initializers;
 

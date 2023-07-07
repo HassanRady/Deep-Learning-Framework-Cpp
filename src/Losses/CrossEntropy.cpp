@@ -1,4 +1,4 @@
-#include "CrossEntropy.h"
+#include "CrossEntropy.hpp"
 
 using namespace DeepStorm::Losses;
 

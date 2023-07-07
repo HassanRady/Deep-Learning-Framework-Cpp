@@ -3,17 +3,17 @@
 #include "tuple"
 #include "iostream"
 
-#include "ImgDataset.h"
-#include "Layer.h"
-#include "Loss.h"
-#include "Model.h"
+#include "ImgDataset.hpp"
+#include "Layer.hpp"
+#include "Loss.hpp"
+#include "Model.hpp"
 
 namespace DeepStorm
 {
     class Trainer
     {
     public:
-        Trainer(Model model, ImgDataset trainData, ImgDataset valData, Loss *loss, int batchSize);
+        Trainer(Model model, DeepStorm::Datasets::ImgDataset trainData, DeepStorm::Datasets::ImgDataset valData, Loss *loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
@@ -26,10 +26,10 @@ namespace DeepStorm
         std::tuple<std::vector<float>, std::vector<float>> fit(int epochs);
 
     private:
-        Network network;
-        Loss *loss;
-        Dataset trainData;
-        Dataset valData;
+        DeepStorm::Model network;
+        DeepStorm::Loss *loss;
+        DeepStorm::Datasets::ImgDataset trainData;
+        DeepStorm::Datasets::ImgDataset valData;
         int batchSize;
     };
 } // namespace DeepStorm

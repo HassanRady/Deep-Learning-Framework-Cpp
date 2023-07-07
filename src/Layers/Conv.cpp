@@ -1,4 +1,4 @@
-#include "Conv.h"
+#include "Conv.hpp"
 
 using namespace DeepStorm::Layers;
 

@@ -1,4 +1,4 @@
-#include "UniformRandom.h"
+#include "UniformRandom.hpp"
 
 using namespace DeepStorm::Initializers;
 

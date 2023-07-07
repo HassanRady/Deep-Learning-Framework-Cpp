@@ -1,4 +1,4 @@
-#include "Relu.h"
+#include "Relu.hpp"
 
 using namespace DeepStorm::Activations;
 

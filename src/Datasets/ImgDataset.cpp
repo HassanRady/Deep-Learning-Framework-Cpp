@@ -1,4 +1,4 @@
-#include "ImgDataset.h"
+#include "ImgDataset.hpp"
 
 using namespace DeepStorm::Datasets;
 

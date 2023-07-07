@@ -1,4 +1,4 @@
-#include "Linear.h"
+#include "Linear.hpp"
 
 using namespace DeepStorm::Layers;
 

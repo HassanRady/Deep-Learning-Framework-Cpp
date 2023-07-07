@@ -1,4 +1,4 @@
-#include "Adam.h"
+#include "Adam.hpp"
 
 using namespace DeepStorm::Optimizers;
 
