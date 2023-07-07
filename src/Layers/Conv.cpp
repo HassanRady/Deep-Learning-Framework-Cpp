@@ -123,7 +123,7 @@ torch::Tensor Conv2d::convolve(torch::Tensor &slice, torch::Tensor &kernel, torc
     return torch::sum(slice * kernel) + bias;
 }
 
-torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) override
+torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) 
 {
     this->inputTensor = inputTensor;
     batchSize = inputTensor.sizes()[0];
@@ -164,7 +164,7 @@ torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) override
     return forwardOutput;
 }
 
-torch::Tensor Conv2d::backward(torch::Tensor &errorTensor) override
+torch::Tensor Conv2d::backward(torch::Tensor &errorTensor) 
 {
     int outputSizeDim1 = errorTensor.sizes()[2];
     int outputSizeDim2 = errorTensor.sizes()[3];

@@ -4,7 +4,7 @@ using namespace DeepStorm::Initializers;
 
 UniformRandom::UniformRandom() {}
 
-void UniformRandom::initialize(torch::Tensor &tensor, int fanIn, int fanOut) override
+void UniformRandom::initialize(torch::Tensor &tensor, int fanIn, int fanOut)
 {
     tensor.fill_(torch::rand_like(tensor));
 }

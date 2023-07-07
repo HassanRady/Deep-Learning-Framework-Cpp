@@ -8,7 +8,7 @@ Dropout::Dropout(float probability = 0.5) : probability(probability)
     initializable = false;
 }
 
-torch::Tensor Dropout::forward(torch::Tensor &inputTensor) override
+torch::Tensor Dropout::forward(torch::Tensor &inputTensor) 
 {
     if (testingPhase)
         return inputTensor;
@@ -18,7 +18,7 @@ torch::Tensor Dropout::forward(torch::Tensor &inputTensor) override
     return mask * inputTensor;
 }
 
-torch::Tensor Dropout::backward(torch::Tensor &errorTensor) override
+torch::Tensor Dropout::backward(torch::Tensor &errorTensor) 
 {
     auto out = errorTensor * mask;
     out = out / probability;

@@ -44,7 +44,7 @@ torch::Tensor BatchNorm2d::normalizeTest(torch::Tensor &tensor)
     return inputNormalized;
 }
 
-torch::Tensor BatchNorm2d::forward(torch::Tensor &inputTensor) override
+torch::Tensor BatchNorm2d::forward(torch::Tensor &inputTensor) 
 {
     this->inputTensor = inputTensor;
     batchSize = inputTensor.sizes()[0];
@@ -59,7 +59,7 @@ torch::Tensor BatchNorm2d::forward(torch::Tensor &inputTensor) override
     return inputNormalized;
 }
 
-torch::Tensor BatchNorm2d::backward(torch::Tensor &errorTensor) override
+torch::Tensor BatchNorm2d::backward(torch::Tensor &errorTensor) 
 {
     torch::Tensor gradientWeight = torch::sum(errorTensor * inputTensorNormalized, {0, 2, 3});
     torch::Tensor gradientBias = errorTensor.sum({0, 2, 3});

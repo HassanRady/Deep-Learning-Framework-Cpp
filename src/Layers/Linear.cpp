@@ -25,7 +25,7 @@ void Linear::initialize()
     weights = torch::cat({weights, bias}, 0);
 }
 
-torch::Tensor Linear::forward(torch::Tensor &inputTensor) override
+torch::Tensor Linear::forward(torch::Tensor &inputTensor) 
 {
     auto inputDims = inputTensor.sizes();
     batchSize = inputDims[0];
@@ -34,7 +34,7 @@ torch::Tensor Linear::forward(torch::Tensor &inputTensor) override
     return torch::matmul(this->inputTensor, weights);
 }
 
-torch::Tensor Linear::backward(torch::Tensor &errorTensor) override
+torch::Tensor Linear::backward(torch::Tensor &errorTensor) 
 {
     gradientWeights = torch::matmul(inputTensor.transpose(1, 0), errorTensor);
 

@@ -26,7 +26,7 @@ std::vector<int> MaxPool2d::getForwardOutputShape(int inputSizeDim1, int inputSi
     return {batchSize, outChannels, outputSizeDim1, outputSizeDim2};
 }
 
-torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor) override
+torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor) 
 {
     this->inputTensor = inputTensor;
     batchSize = inputTensor.sizes()[0];
@@ -63,7 +63,7 @@ torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor) override
     return output;
 }
 
-torch::Tensor MaxPool2d::backward(torch::Tensor &errorTensor) override
+torch::Tensor MaxPool2d::backward(torch::Tensor &errorTensor) 
 {
     int outputSizeDim1 = errorTensor.sizes()[2];
     int outputSizeDim2 = errorTensor.sizes()[3];

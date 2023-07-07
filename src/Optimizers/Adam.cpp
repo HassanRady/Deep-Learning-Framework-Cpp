@@ -7,7 +7,7 @@ Adam::Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, doubl
                                                                                                      mu(mu), rho(rho),
                                                                                                      epsilon(epsilon) {}
 
-void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override
+void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) 
 {
     k = k + 1;
 

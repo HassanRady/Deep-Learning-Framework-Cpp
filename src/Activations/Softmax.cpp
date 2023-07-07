@@ -8,7 +8,7 @@ SoftMax::SoftMax()
     initializable = false;
 }
 
-torch::Tensor SoftMax::forward(torch::Tensor &x) override
+torch::Tensor SoftMax::forward(torch::Tensor &x) 
 {
     auto max_val = x.amax({-1}, true);
     auto exp_x = torch::exp(x - max_val);
@@ -17,7 +17,7 @@ torch::Tensor SoftMax::forward(torch::Tensor &x) override
     return softmaxOutput;
 }
 
-torch::Tensor SoftMax::backward(torch::Tensor &y) override
+torch::Tensor SoftMax::backward(torch::Tensor &y) 
 {
     const auto batch_size = softmaxOutput.size(0);
     const auto num_classes = softmaxOutput.size(1);

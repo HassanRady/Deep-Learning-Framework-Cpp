@@ -8,7 +8,7 @@ Flatten::Flatten()
     initializable = false;
 }
 
-torch::Tensor Flatten::forward(torch::Tensor &inputTensor) override
+torch::Tensor Flatten::forward(torch::Tensor &inputTensor) 
 {
     this->inputTensor = inputTensor;
     auto inputTensorDims = inputTensor.sizes();
@@ -21,7 +21,7 @@ torch::Tensor Flatten::forward(torch::Tensor &inputTensor) override
     return flattenTensor;
 }
 
-torch::Tensor Flatten::backward(torch::Tensor &errorTensor) override
+torch::Tensor Flatten::backward(torch::Tensor &errorTensor) 
 {
     auto reshapedTensor = errorTensor.reshape(inputTensor.sizes());
     return reshapedTensor;

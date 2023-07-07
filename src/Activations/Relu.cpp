@@ -10,7 +10,7 @@ torch::Tensor Relu::forward(torch::Tensor &x)
     return torch::max(x, torch::zeros_like(x, torch::kCUDA));
 }
 
-torch::Tensor Relu::backward(torch::Tensor &y) override
+torch::Tensor Relu::backward(torch::Tensor &y)
 {
     return pos * y;
 }
