@@ -1,28 +1,38 @@
+#include "torch/torch.h"
 #include "iostream"
 #include "vector"
 #include "string"
-#include "torch/torch.h"
+#include "memory"
 
-#include "Dataset.h"
-#include "Trainer.h"
-#include "Optimizer.h"
-#include "Loss.h"
-
-#include "Base.h"
-#include "Conv.h"
-#include "Pooling.h"
-#include "BatchNormalization.h"
-#include "FullyConnected.h"
-#include "Initializers.h"
-#include "Relu.h"
-#include "Dropout.h"
-#include "Flatten.h"
-#include "Softmax.h"
-#include "Network.h"
+#include "Layer.hpp"
+#include "Conv.hpp"
+#include "BatchNormalization.hpp"
+#include "Dropout.hpp"
+#include "Flatten.hpp"
+#include "Linear.hpp"
+#include "Pooling.hpp"
+#include "Relu.hpp"
+#include "Softmax.hpp"
+#include "He.hpp"
+#include "Constant.hpp"
+#include "Optimizer.hpp"
+#include "Adam.hpp"
+#include "ImgDataset.hpp"
+#include "Trainer.hpp"
+#include "CrossEntropy.hpp"
 
 using namespace std;
 
-int main() {
+using namespace DeepStorm;
+using namespace DeepStorm::Layers;
+using namespace DeepStorm::Activations;
+using namespace DeepStorm::Optimizers;
+// using namespace DeepStorm::Initializers;
+using namespace DeepStorm::Datasets;
+using namespace DeepStorm::Losses;
+
+int main()
+{
 
     auto batchSize = 2;
     auto inChannels = 1;
@@ -32,13 +42,16 @@ int main() {
     auto padding = "same";
     auto classes = 10;
 
-    He wInit;
-    Constant bInit;
+    // DeepStorm::WeightInitializer* wInit = &DeepStorm::Initializers::He();
+
+    Initializers::He wInit = Initializers::He();
+
+    DeepStorm::Initializers::Constant bInit(1);
 
     Conv2d conv1(inChannels, outChannels, filterSize, stride, padding, &wInit, &bInit);
     Conv2d conv2(outChannels, outChannels, filterSize, stride, padding, &wInit, &bInit);
-    BatchNorm2d batchNorm1 (outChannels);
-    BatchNorm2d batchNorm2(outChannels);
+    BatchNorm2d batchNorm1(16, 1e-11, 0.8);
+    BatchNorm2d batchNorm2(16, 1e-11, 0.8);
     Dropout dropout(0.3);
     MaxPool2d maxPool1(2, 2);
     MaxPool2d maxPool2(2, 2);
@@ -46,14 +59,14 @@ int main() {
     ReLU relu2;
     ReLU relu3;
     Flatten flatten;
-    Linear fc1(outChannels*7*7, 32, &wInit, &bInit);
+    Linear fc1(outChannels * 7 * 7, 32, &wInit, &bInit);
     Linear fc2(32, classes, &wInit, &bInit);
     SoftMax softmax;
 
-    Adam optimizer;
-    CrossEntropyLoss loss;
+    Adam optimizer();
+    CrossEntropyLoss loss(1e-09);
 
-    auto model = Network(vector<BaseLayer*>{
+    auto model = Model(vector<Layer *>{
         &conv1,
         &batchNorm1,
         &dropout,
@@ -67,25 +80,29 @@ int main() {
         &fc1,
         &relu3,
         &fc2,
-        &softmax
-    });
+        &softmax});
 
-    // model.setOptimizer(&optimizer);
-    conv1.optimizer = new Adam();
-    conv2.optimizer = new Adam();
-    batchNorm1.optimizer = new Adam();
-    batchNorm2.optimizer = new Adam();
-    fc1.optimizer = new Adam();
-    fc2.optimizer = new Adam();
+    conv1.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
+    conv2.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
+    batchNorm1.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
+    batchNorm2.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
+    fc1.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
+    fc2.optimizer = new Adam(0.001, 0.9, 0.9, 1e-07);
 
-    auto trainset = Dataset ("./data/trainset", 1, (unsigned) 1);
-    auto valset = Dataset ("./data/trainset", 1);
+    auto trainset = ImgDataset("./data/trainset", 1, (unsigned)1);
+    auto valset = ImgDataset("./data/trainset", 1, (unsigned)2);
 
     trainset.resize(12);
     valset.resize(2);
 
-   auto trainer = Trainer(model, trainset, valset, &loss, batchSize);
+    auto trainLoader = torch::data::make_data_loader(std::move(trainset.map(torch::data::transforms::Stack<>())),
+                                                     torch::data::DataLoaderOptions().batch_size(batchSize).drop_last(true));
 
-   auto [x, y] = trainer.fit(5);
+    auto valLoader = torch::data::make_data_loader(std::move(valset.map(torch::data::transforms::Stack<>())),
+                                                   torch::data::DataLoaderOptions().batch_size(batchSize).drop_last(true));
 
+
+    auto trainer = Trainer(model, &loss, batchSize);
+
+    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 5);
 }
