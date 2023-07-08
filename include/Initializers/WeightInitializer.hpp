@@ -8,8 +8,6 @@ namespace DeepStorm
     {
     public:
         virtual void initialize(torch::Tensor &tensor, int fanIn, int fanOut) = 0;
-        virtual ~WeightInitializer() = 0;
+        virtual ~WeightInitializer() = default;
     };
-
-    WeightInitializer::~WeightInitializer() {}
 } // namespace DeepStorm
