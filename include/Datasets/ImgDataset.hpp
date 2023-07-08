@@ -24,8 +24,11 @@ namespace DeepStorm
 
             ImgDataset(std::string path, int channels, unsigned seed);
 
-            
+            torch::data::Example<> get(size_t index) override;
 
+            virtual torch::optional<size_t> size() const override;
+
+            torch::Tensor toOneHotEncoding(torch::Tensor &labels, int numClasses) override;
 
             void resize(int size);
 
@@ -41,11 +44,9 @@ namespace DeepStorm
 
             std::vector<torch::Tensor> process_labels(std::vector<std::string> list_labels);
 
-            torch::Tensor toOneHotEncoding(torch::Tensor &labels, int numClasses);
 
             std::tuple<std::vector<std::string>, std::vector<std::string>> shuffle(std::vector<Example> &examples, unsigned seed);
 
-            std::vector<torch::Tensor> images, labels;
             std::vector<std::string> classes;
         };
     } // namespace Datasets
