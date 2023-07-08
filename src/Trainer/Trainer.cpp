@@ -2,44 +2,46 @@
 
 using namespace DeepStorm;
 
-Trainer::Trainer(Model model, DeepStorm::Dataset* trainData, DeepStorm::Dataset* valData, Loss *loss, int batchSize)
+template <class Dataset>
+Trainer<Dataset>::Trainer(Model model, Dataset &trainData, Dataset &valData, std::unique_ptr<DeepStorm::Loss> loss, int batchSize)
 {
-    Trainer::model = model;
-    Trainer::loss = loss;
-    Trainer::trainData = trainData;
-    Trainer::valData = valData;
-    Trainer::batchSize = batchSize;
+    Trainer<Dataset>::model = model;
+    Trainer<Dataset>::loss = std::make_unique<Loss>(loss);
+    Trainer<Dataset>::trainData = trainData;
+    Trainer<Dataset>::valData = valData;
+    Trainer<Dataset>::batchSize = batchSize;
 }
 
-std::tuple<float, torch::Tensor> Trainer::trainBatch(torch::Tensor &x, torch::Tensor &y)
+template <class Dataset>
+std::tuple<float, torch::Tensor> Trainer<Dataset>::trainBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = Trainer::model.forward(x);
-    float loss = Trainer::loss->forward(output, y);
+    torch::Tensor output = Trainer<Dataset>::model.forward(x);
+    float loss = Trainer<Dataset>::loss->forward(output, y);
 
-    y = Trainer::loss->backward(y);
-    Trainer::model.backward(y);
+    y = Trainer<Dataset>::loss->backward(y);
+    Trainer<Dataset>::model.backward(y);
 
     return {loss, output};
 }
 
-std::tuple<float, torch::Tensor> Trainer::valBatch(torch::Tensor &x, torch::Tensor &y)
+template <class Dataset>
+std::tuple<float, torch::Tensor> Trainer<Dataset>::valBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = Trainer::model.forward(x);
-    float loss = Trainer::loss->forward(output, y);
+    torch::Tensor output = Trainer<Dataset>::model.forward(x);
+    float loss = Trainer<Dataset>::loss->forward(output, y);
     return {loss, output};
 }
 
-std::tuple<float, std::vector<torch::Tensor>> Trainer::trainEpoch()
+template <class Dataset>
+std::tuple<float, std::vector<torch::Tensor>> Trainer<Dataset>::trainEpoch()
 {
-    Trainer::model.train();
+    Trainer<Dataset>::model.train();
 
     std::vector<torch::Tensor> runningPreds;
     float runningLoss = 0.0;
 
-    auto trainLoader = torch::data::make_data_loader(std::move(Trainer::trainData->map(torch::data::transforms::Stack<>())),
-                                                     torch::data::DataLoaderOptions().batch_size(batchSize));
     torch::Tensor x, y;
-    for (auto &batch : *trainLoader)
+    for (auto &batch : *trainData)
     {
         x = batch.data.to(torch::kCUDA);
         y = batch.target.to(torch::kCUDA);
@@ -57,22 +59,21 @@ std::tuple<float, std::vector<torch::Tensor>> Trainer::trainEpoch()
     return {epochLoss, runningPreds};
 }
 
-std::tuple<float, std::vector<torch::Tensor>> Trainer::valEpoch()
+template <class Dataset>
+std::tuple<float, std::vector<torch::Tensor>> Trainer<Dataset>::valEpoch()
 {
-    Trainer::model.eval();
+    Trainer<Dataset>::model.eval();
 
     std::vector<torch::Tensor> runningPreds;
     float runningLoss = 0.0;
 
-    auto valLoader = torch::data::make_data_loader(std::move(Trainer::valData->map(torch::data::transforms::Stack<>())),
-                                                   torch::data::DataLoaderOptions().batch_size(batchSize));
     torch::Tensor x, y;
-    for (auto &batch : *valLoader)
+    for (auto &batch : *valData)
     {
         x = batch.data.to(torch::kCUDA);
         y = batch.target.to(torch::kCUDA);
 
-        auto [batchLoss, preds] = Trainer::valBatch(x, y);
+        auto [batchLoss, preds] = Trainer<Dataset>::valBatch(x, y);
 
         runningLoss += batchLoss;
         runningPreds.push_back(preds);
@@ -85,7 +86,8 @@ std::tuple<float, std::vector<torch::Tensor>> Trainer::valEpoch()
     return {epochLoss, runningPreds};
 }
 
-std::tuple<std::vector<float>, std::vector<float>> Trainer::fit(int epochs)
+template <class Dataset>
+std::tuple<std::vector<float>, std::vector<float>> Trainer<Dataset>::fit(int epochs)
 {
     std::vector<float> trainLosses;
     std::vector<torch::Tensor> trainPreds;
