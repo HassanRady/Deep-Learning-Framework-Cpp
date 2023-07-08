@@ -14,13 +14,13 @@ torch::Tensor Dropout::forward(torch::Tensor &inputTensor)
         return inputTensor;
 
     auto tensorShape = inputTensor.sizes();
-    mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(inputTensor.device());
-    return mask * inputTensor;
+    Dropout::mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(inputTensor.device());
+    return Dropout::mask * inputTensor;
 }
 
 torch::Tensor Dropout::backward(torch::Tensor &errorTensor) 
 {
-    auto out = errorTensor * mask;
-    out = out / probability;
+    auto out = errorTensor * Dropout::mask;
+    out = out / Dropout::probability;
     return out;
 }
