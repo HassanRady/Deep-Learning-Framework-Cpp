@@ -23,7 +23,9 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_executable(DeepStorm example.cpp)
+file(GLOB SOURCES "src/*/*.cpp" example.cpp)
+
+add_executable(DeepStorm ${SOURCES})
 
 target_link_libraries(DeepStorm "${TORCH_LIBRARIES}")
 target_link_libraries(DeepStorm "${OpenCV_LIBS}")
