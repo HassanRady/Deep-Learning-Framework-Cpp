@@ -4,13 +4,13 @@ using namespace DeepStorm::Datasets;
 
 ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
 {
-    auto [classes, examples] = readDatasetDir(path);
-    this->classes = classes;
+    auto [classes, examples] = ImgDataset::readDatasetDir(path);
+    ImgDataset::classes = classes;
 
     auto [imgsPath, imgsLabel] = ImgDataset::shuffle(examples, (unsigned)seed);
 
-    ImgDataset::xs = process_images(imgsPath, channels);
-    ImgDataset::ys = process_labels(imgsLabel);
+    ImgDataset::xs = ImgDataset::process_images(imgsPath, channels);
+    ImgDataset::ys = ImgDataset::process_labels(imgsLabel);
 };
 
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
@@ -24,13 +24,13 @@ std::vector<std::string> ImgDataset::readImgDir(std::string path)
 std::tuple<std::vector<std::string>, std::vector<ImgDataset::Example>> ImgDataset::readDatasetDir(std::string path)
 {
     std::vector<std::string> classes, imgs, labels;
-    std::vector<Example> examples;
+    std::vector<ImgDataset::Example> examples;
     for (const auto &entry : std::filesystem::directory_iterator(path))
     {
         classes.push_back(entry.path().filename());
         for (const auto &file : std::filesystem::directory_iterator(entry))
         {
-            Example example;
+            ImgDataset::Example example;
             example.x = file.path();
             example.y = entry.path().filename();
             examples.push_back(example);
@@ -100,15 +100,15 @@ std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuff
 
 torch::data::Example<> ImgDataset::get(size_t index)
 {
-    torch::Tensor sampleImg = Dataset::xs.at(index);
-    torch::Tensor sample_label = Dataset::ys.at(index);
+    torch::Tensor sampleImg = ImgDataset::xs.at(index);
+    torch::Tensor sample_label = ImgDataset::ys.at(index);
     auto oneHotLabel = ImgDataset::toOneHotEncoding(sample_label, ImgDataset::classes.size());
     return {sampleImg.clone(), oneHotLabel.clone()};
 };
 
 torch::optional<size_t> ImgDataset::size() const
 {
-    return Dataset::ys.size();
+    return ImgDataset::ys.size();
 };
 
 void ImgDataset::resize(int size)
