@@ -7,14 +7,11 @@
 #include "string"
 #include "filesystem"
 #include "random"
-
-#include "Dataset.hpp"
-
 namespace DeepStorm
 {
     namespace Datasets
     {
-        class ImgDataset : public DeepStorm::Dataset
+        class ImgDataset : public torch::data::datasets::Dataset<ImgDataset>
         {
         public:
             struct Example
@@ -26,9 +23,9 @@ namespace DeepStorm
 
             torch::data::Example<> get(size_t index) override;
 
-            virtual torch::optional<size_t> size() const override;
+            torch::optional<size_t> size() const override;
 
-            torch::Tensor toOneHotEncoding(torch::Tensor &labels, int numClasses) override;
+            torch::Tensor toOneHotEncoding(torch::Tensor &labels, int numClasses);
 
             void resize(int size);
 
@@ -47,6 +44,7 @@ namespace DeepStorm
 
             std::tuple<std::vector<std::string>, std::vector<std::string>> shuffle(std::vector<Example> &examples, unsigned seed);
 
+            std::vector<torch::Tensor> xs, ys;
             std::vector<std::string> classes;
         };
     } // namespace Datasets
