@@ -23,5 +23,5 @@ void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTens
     auto vHat = (v) / (1 - pow(mu, k));
     auto rHat = (r) / (1 - pow(rho, k));
 
-    weightTensor = weightTensor - learningRate * (vHat) / (pow(rHat, 2) + epsilon);
+    weightTensor = weightTensor - Adam::learningRate * (vHat) / (pow(rHat, 2) + Adam::epsilon);
 }
