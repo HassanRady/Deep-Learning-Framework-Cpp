@@ -2,18 +2,20 @@
 #include "vector"
 #include "tuple"
 #include "iostream"
+#include "memory"
 
-#include "Dataset.hpp"
+// #include "Dataset.hpp"
 #include "Layer.hpp"
 #include "Loss.hpp"
 #include "Model.hpp"
 
 namespace DeepStorm
 {
+    template<class Dataset>
     class Trainer
     {
     public:
-        Trainer(Model model, DeepStorm::Dataset* trainData, DeepStorm::Dataset* valData, Loss *loss, int batchSize);
+        Trainer(Model model, Dataset& trainData, Dataset& valData, std::unique_ptr<DeepStorm::Loss> loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
@@ -27,9 +29,9 @@ namespace DeepStorm
 
     private:
         DeepStorm::Model model;
-        DeepStorm::Loss *loss;
-        DeepStorm::Dataset* trainData;
-        DeepStorm::Dataset* valData;
+        std::unique_ptr<DeepStorm::Loss> loss;
+        Dataset trainData;
+        Dataset valData;
         int batchSize;
     };
 } // namespace DeepStorm
