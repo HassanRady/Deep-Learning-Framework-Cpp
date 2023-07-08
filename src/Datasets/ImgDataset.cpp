@@ -7,10 +7,10 @@ ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
     auto [classes, examples] = readDatasetDir(path);
     this->classes = classes;
 
-    auto [xs, ys] = ImgDataset::shuffle(examples, (unsigned)seed);
+    auto [imgsPath, imgsLabel] = ImgDataset::shuffle(examples, (unsigned)seed);
 
-    ImgDataset::images = process_images(xs, channels);
-    ImgDataset::labels = process_labels(ys);
+    ImgDataset::xs = process_images(imgsPath, channels);
+    ImgDataset::ys = process_labels(imgsLabel);
 };
 
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
@@ -76,12 +76,12 @@ std::vector<torch::Tensor> ImgDataset::process_labels(std::vector<std::string> l
     return labels;
 }
 
-// torch::Tensor ImgDataset::toOneHotEncoding(torch::Tensor &labels, int numClasses)
-// {
-//     torch::Tensor identity = torch::eye(numClasses);
-//     torch::Tensor oneHot = identity.index_select(0, labels);
-//     return oneHot.squeeze_();
-// }
+torch::Tensor ImgDataset::toOneHotEncoding(torch::Tensor &labels, int numClasses)
+{
+    torch::Tensor identity = torch::eye(numClasses);
+    torch::Tensor oneHot = identity.index_select(0, labels);
+    return oneHot.squeeze_();
+}
 
 std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuffle(std::vector<Example> &examples, unsigned seed)
 {
@@ -98,25 +98,24 @@ std::tuple<std::vector<std::string>, std::vector<std::string>> ImgDataset::shuff
     return {xs, ys};
 }
 
-// torch::data::Example<> ImgDataset::get(size_t index) 
-// {
-//     torch::Tensor sampleImg = ImgDataset::images.at(index);
-//     torch::Tensor sample_label = ImgDataset::labels.at(index);
-//     torch::Tensor oneHotLabel = toOneHotEncoding(sample_label, classes.size());
-//     return {sampleImg.clone(), oneHotLabel.clone()};
-// };
+torch::data::Example<> ImgDataset::get(size_t index)
+{
+    torch::Tensor sampleImg = Dataset::xs.at(index);
+    torch::Tensor sample_label = Dataset::ys.at(index);
+    auto oneHotLabel = ImgDataset::toOneHotEncoding(sample_label, ImgDataset::classes.size());
+    return {sampleImg.clone(), oneHotLabel.clone()};
+};
 
-// torch::optional<size_t> ImgDataset::size() const 
-// {
-//     return ImgDataset::labels.size();
-// };
+torch::optional<size_t> ImgDataset::size() const
+{
+    return Dataset::ys.size();
+};
 
 void ImgDataset::resize(int size)
 {
-    if (size <= ImgDataset::labels.size())
+    if (size <= ImgDataset::ys.size())
     {
-        ImgDataset::images = std::vector<torch::Tensor>(images.begin(), images.begin() + size);
-        labels = std::vector<torch::Tensor>(labels.begin(), labels.begin() + size);
+        ImgDataset::xs = std::vector<torch::Tensor>(ImgDataset::xs.begin(), ImgDataset::xs.begin() + size);
+        ImgDataset::ys = std::vector<torch::Tensor>(ImgDataset::ys.begin(), ImgDataset::ys.begin() + size);
     }
 }
-
