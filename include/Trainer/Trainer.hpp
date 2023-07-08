@@ -11,27 +11,115 @@
 
 namespace DeepStorm
 {
-    template<class Dataset>
     class Trainer
     {
     public:
-        Trainer(Model model, Dataset& trainData, Dataset& valData, std::unique_ptr<DeepStorm::Loss> loss, int batchSize);
+        Trainer(Model &model, DeepStorm::Loss *loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
         std::tuple<float, torch::Tensor> valBatch(torch::Tensor &x, torch::Tensor &y);
 
-        std::tuple<float, std::vector<torch::Tensor>> trainEpoch();
+        // template<typename DataLoader>
+        // std::tuple<float, std::vector<torch::Tensor>> trainEpoch(DataLoader& loader);
 
-        std::tuple<float, std::vector<torch::Tensor>> valEpoch();
+        // template<typename DataLoader>
+        // std::tuple<float, std::vector<torch::Tensor>> valEpoch(DataLoader& loader);
 
-        std::tuple<std::vector<float>, std::vector<float>> fit(int epochs);
+        // template<typename DataLoader>
+        // std::tuple<std::vector<float>, std::vector<float>> fit(DataLoader& trainLoader, DataLoader& valLoader, int epochs);
+
+        template <typename DataLoader>
+        std::tuple<float, std::vector<torch::Tensor>> trainEpoch(DataLoader &loader)
+        {
+            model.train();
+
+            std::vector<torch::Tensor> runningPreds;
+            float runningLoss = 0.0;
+            int size = 0;
+
+            torch::Tensor x, y;
+            for (auto &batch : loader)
+            {
+                size += y.sizes()[0];
+
+                x = batch.data.to(torch::kCUDA);
+                y = batch.target.to(torch::kCUDA);
+
+                auto [batchLoss, preds] = trainBatch(x, y);
+
+                runningLoss += batchLoss;
+                runningPreds.push_back(preds);
+            }
+
+            float epochLoss = runningLoss / size;
+
+            std::cout << "Train loss: " << epochLoss << "\n";
+
+            return {epochLoss, runningPreds};
+        }
+
+        template <typename DataLoader>
+        std::tuple<float, std::vector<torch::Tensor>> valEpoch(DataLoader &loader)
+        {
+            model.eval();
+
+            std::vector<torch::Tensor> runningPreds;
+            float runningLoss = 0.0;
+            int size = 0;
+
+            torch::Tensor x, y;
+            for (auto &batch : loader)
+            {
+                size += y.sizes()[0];
+
+                x = batch.data.to(torch::kCUDA);
+                y = batch.target.to(torch::kCUDA);
+
+                auto [batchLoss, preds] = valBatch(x, y);
+
+                runningLoss += batchLoss;
+                runningPreds.push_back(preds);
+            }
+
+            float epochLoss = runningLoss / size;
+
+            std::cout << "Val loss: " << epochLoss << "\n";
+
+            return {epochLoss, runningPreds};
+        }
+
+        template <typename DataLoader>
+        std::tuple<std::vector<float>, std::vector<float>> fit(DataLoader &trainLoader, DataLoader &valLoader, int epochs)
+        {
+            std::vector<float> trainLosses;
+            std::vector<torch::Tensor> trainPreds;
+            std::vector<float> valLosses;
+            std::vector<torch::Tensor> valPreds;
+
+            for (int i = 1; i <= epochs; ++i)
+            {
+                std::cout << "Epoch: " << i << "\n";
+
+                auto [trainLoss, trainPred] = trainEpoch(trainLoader);
+                auto [valLoss, valPred] = valEpoch(valLoader);
+
+                trainLosses.push_back(trainLoss);
+                valLosses.push_back(valLoss);
+                //            trainPreds.insert(trainPreds);
+                //            valPreds.insert(valPreds);
+
+                // TODO metrics
+
+                std::cout;
+            }
+
+            return {trainLosses, valLosses};
+        }
 
     private:
         DeepStorm::Model model;
-        std::unique_ptr<DeepStorm::Loss> loss;
-        Dataset trainData;
-        Dataset valData;
+        DeepStorm::Loss *loss;
         int batchSize;
     };
 } // namespace DeepStorm

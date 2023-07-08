@@ -2,114 +2,120 @@
 
 using namespace DeepStorm;
 
-template <class Dataset>
-Trainer<Dataset>::Trainer(Model model, Dataset &trainData, Dataset &valData, std::unique_ptr<DeepStorm::Loss> loss, int batchSize)
+
+Trainer::Trainer(Model& model, DeepStorm::Loss* loss, int batchSize)
 {
-    Trainer<Dataset>::model = model;
-    Trainer<Dataset>::loss = std::make_unique<Loss>(loss);
-    Trainer<Dataset>::trainData = trainData;
-    Trainer<Dataset>::valData = valData;
-    Trainer<Dataset>::batchSize = batchSize;
+    Trainer::model = model;
+    // Trainer::loss = std::make_unique<Loss>(loss);
+    Trainer::loss = loss;
+    Trainer::batchSize = batchSize;
 }
 
-template <class Dataset>
-std::tuple<float, torch::Tensor> Trainer<Dataset>::trainBatch(torch::Tensor &x, torch::Tensor &y)
-{
-    torch::Tensor output = Trainer<Dataset>::model.forward(x);
-    float loss = Trainer<Dataset>::loss->forward(output, y);
 
-    y = Trainer<Dataset>::loss->backward(y);
-    Trainer<Dataset>::model.backward(y);
+std::tuple<float, torch::Tensor> Trainer::trainBatch(torch::Tensor &x, torch::Tensor &y)
+{
+    torch::Tensor output = Trainer::model.forward(x);
+    float loss = Trainer::loss->forward(output, y);
+
+    y = Trainer::loss->backward(y);
+    Trainer::model.backward(y);
 
     return {loss, output};
 }
 
-template <class Dataset>
-std::tuple<float, torch::Tensor> Trainer<Dataset>::valBatch(torch::Tensor &x, torch::Tensor &y)
+
+std::tuple<float, torch::Tensor> Trainer::valBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = Trainer<Dataset>::model.forward(x);
-    float loss = Trainer<Dataset>::loss->forward(output, y);
+    torch::Tensor output = Trainer::model.forward(x);
+    float loss = Trainer::loss->forward(output, y);
     return {loss, output};
 }
 
-template <class Dataset>
-std::tuple<float, std::vector<torch::Tensor>> Trainer<Dataset>::trainEpoch()
-{
-    Trainer<Dataset>::model.train();
+// template<typename DataLoader>
+// std::tuple<float, std::vector<torch::Tensor>> Trainer::trainEpoch(DataLoader& loader)
+// {
+//     Trainer::model.train();
 
-    std::vector<torch::Tensor> runningPreds;
-    float runningLoss = 0.0;
+//     std::vector<torch::Tensor> runningPreds;
+//     float runningLoss = 0.0;
+//     int size = 0;
 
-    torch::Tensor x, y;
-    for (auto &batch : *trainData)
-    {
-        x = batch.data.to(torch::kCUDA);
-        y = batch.target.to(torch::kCUDA);
+//     torch::Tensor x, y;
+//     for (auto &batch : loader)
+//     {
+//         size += y.sizes()[0];
 
-        auto [batchLoss, preds] = trainBatch(x, y);
+//         x = batch.data.to(torch::kCUDA);
+//         y = batch.target.to(torch::kCUDA);
 
-        runningLoss += batchLoss;
-        runningPreds.push_back(preds);
-    }
 
-    float epochLoss = runningLoss / trainData->size().value();
+//         auto [batchLoss, preds] = trainBatch(x, y);
 
-    std::cout << "Train loss: " << epochLoss << "\n";
+//         runningLoss += batchLoss;
+//         runningPreds.push_back(preds);
+//     }
 
-    return {epochLoss, runningPreds};
-}
+//     float epochLoss = runningLoss / size;
 
-template <class Dataset>
-std::tuple<float, std::vector<torch::Tensor>> Trainer<Dataset>::valEpoch()
-{
-    Trainer<Dataset>::model.eval();
+//     std::cout << "Train loss: " << epochLoss << "\n";
 
-    std::vector<torch::Tensor> runningPreds;
-    float runningLoss = 0.0;
+//     return {epochLoss, runningPreds};
+// }
 
-    torch::Tensor x, y;
-    for (auto &batch : *valData)
-    {
-        x = batch.data.to(torch::kCUDA);
-        y = batch.target.to(torch::kCUDA);
+// template<typename DataLoader>
+// std::tuple<float, std::vector<torch::Tensor>> Trainer::valEpoch(DataLoader& loader)
+// {
+//     Trainer::model.eval();
 
-        auto [batchLoss, preds] = Trainer<Dataset>::valBatch(x, y);
+//     std::vector<torch::Tensor> runningPreds;
+//     float runningLoss = 0.0;
+//     int size = 0;
 
-        runningLoss += batchLoss;
-        runningPreds.push_back(preds);
-    }
+//     torch::Tensor x, y;
+//     for (auto &batch : loader)
+//     {
+//         size += y.sizes()[0];
 
-    float epochLoss = runningLoss / valData->size().value();
+//         x = batch.data.to(torch::kCUDA);
+//         y = batch.target.to(torch::kCUDA);
 
-    std::cout << "Val loss: " << epochLoss << "\n";
+//         auto [batchLoss, preds] = Trainer::valBatch(x, y);
 
-    return {epochLoss, runningPreds};
-}
+//         runningLoss += batchLoss;
+//         runningPreds.push_back(preds);
+//     }
 
-template <class Dataset>
-std::tuple<std::vector<float>, std::vector<float>> Trainer<Dataset>::fit(int epochs)
-{
-    std::vector<float> trainLosses;
-    std::vector<torch::Tensor> trainPreds;
-    std::vector<float> valLosses;
-    std::vector<torch::Tensor> valPreds;
+//     float epochLoss = runningLoss / size;
 
-    for (int i = 1; i <= epochs; ++i)
-    {
-        std::cout << "Epoch: " << i << "\n";
+//     std::cout << "Val loss: " << epochLoss << "\n";
 
-        auto [trainLoss, trainPred] = trainEpoch();
-        auto [valLoss, valPred] = valEpoch();
+//     return {epochLoss, runningPreds};
+// }
 
-        trainLosses.push_back(trainLoss);
-        valLosses.push_back(valLoss);
-        //            trainPreds.insert(trainPreds);
-        //            valPreds.insert(valPreds);
+// template<typename DataLoader>
+// std::tuple<std::vector<float>, std::vector<float>> Trainer::fit(DataLoader& trainLoader, DataLoader& valLoader, int epochs)
+// {
+//     std::vector<float> trainLosses;
+//     std::vector<torch::Tensor> trainPreds;
+//     std::vector<float> valLosses;
+//     std::vector<torch::Tensor> valPreds;
 
-        // TODO metrics
+//     for (int i = 1; i <= epochs; ++i)
+//     {
+//         std::cout << "Epoch: " << i << "\n";
 
-        std::cout;
-    }
+//         auto [trainLoss, trainPred] = Trainer::trainEpoch(trainLoader);
+//         auto [valLoss, valPred] = Trainer::valEpoch(valLoader);
 
-    return {trainLosses, valLosses};
-}
+//         trainLosses.push_back(trainLoss);
+//         valLosses.push_back(valLoss);
+//         //            trainPreds.insert(trainPreds);
+//         //            valPreds.insert(valPreds);
+
+//         // TODO metrics
+
+//         std::cout;
+//     }
+
+//     return {trainLosses, valLosses};
+// }
