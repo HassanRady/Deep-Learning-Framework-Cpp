@@ -7,7 +7,6 @@
 #include "tuple"
 
 #include "Layer.hpp"
-#include "Optimizer.hpp"
 
 namespace DeepStorm
 {
