@@ -12,28 +12,28 @@ Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelS
     Conv2d::inChannels = inChannels;
     Conv2d::outChannels = outChannels;
 
-    kernelSizeDim1 = kernelSize->operator[](0);
-    kernelSizeDim2 = kernelSize->operator[](1);
+    Conv2d::kernelSizeDim1 = kernelSize->operator[](0);
+    Conv2d::kernelSizeDim2 = kernelSize->operator[](1);
 
-    strideDim1 = stride->operator[](0);
-    strideDim2 = stride->operator[](1);
+    Conv2d::strideDim1 = stride->operator[](0);
+    Conv2d::strideDim2 = stride->operator[](1);
 
     Conv2d::padding = padding;
 
     Conv2d::weightInitializer = weightInitializer;
     Conv2d::biasInitializer = biasInitializer;
 
-    initialize();
+    Conv2d::initialize();
 }
 
 void Conv2d::initialize()
 {
-    weights = torch::empty({outChannels, inChannels, kernelSizeDim1, kernelSizeDim2}, torch::kCUDA);
-    bias = torch::empty({outChannels, 1}, torch::kCUDA);
+    Conv2d::weights = torch::empty({outChannels, inChannels, kernelSizeDim1, kernelSizeDim2}, torch::kCUDA);
+    Conv2d::bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
-    weightInitializer->initialize(weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
+    Conv2d::weightInitializer->initialize(Conv2d::weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
                                   kernelSizeDim1 * kernelSizeDim2 * outChannels);
-    biasInitializer->initialize(bias, outChannels, 1);
+    Conv2d::biasInitializer->initialize(bias, outChannels, 1);
 }
 
 int Conv2d::getShapeAfterConv(int dimSize, int kernelSize, std::vector<int> pad, int stride)
@@ -60,17 +60,17 @@ void Conv2d::checkPaddingType(std::string padding)
 {
     if (padding == "same")
     {
-        padSizeDim1 = Conv2d::getPadSizeSame(kernelSizeDim1);
-        padSizeDim2 = Conv2d::getPadSizeSame(kernelSizeDim2);
+        Conv2d::padSizeDim1 = Conv2d::getPadSizeSame(Conv2d::kernelSizeDim1);
+        Conv2d::padSizeDim2 = Conv2d::getPadSizeSame(Conv2d::kernelSizeDim2);
     }
     else if (padding == "valid")
     {
-        padSizeDim1 = {0, 0};
-        padSizeDim2 = {0, 0};
+        Conv2d::padSizeDim1 = {0, 0};
+        Conv2d::padSizeDim2 = {0, 0};
     }
     //        else if (isdigit(padding)) {
-    //            padSizeDim1 = {padding, padding};
-    //            padSizeDim2 = {padding, padding};
+    //            Conv2d::padSizeDim1 = {padding, padding};
+    //            Conv2d::padSizeDim2 = {padding, padding};
     //        }
 }
 
@@ -79,10 +79,10 @@ void Conv2d::checkPaddingType(std::string padding)
  * */
 torch::Tensor Conv2d::padImagesSame(torch::Tensor &images)
 {
-    int startPadDim1 = padSizeDim1[0];
-    int endPadDim1 = padSizeDim1[1];
-    int startPadDim2 = padSizeDim2[0];
-    int endPadDim2 = padSizeDim2[1];
+    int startPadDim1 = Conv2d::padSizeDim1[0];
+    int endPadDim1 = Conv2d::padSizeDim1[1];
+    int startPadDim2 = Conv2d::padSizeDim2[0];
+    int endPadDim2 = Conv2d::padSizeDim2[1];
 
     std::vector<int64_t> padding = {startPadDim2, endPadDim2, startPadDim1, endPadDim1, 0, 0};
     torch::nn::functional::PadFuncOptions options(padding);
@@ -95,10 +95,10 @@ torch::Tensor Conv2d::padImagesSame(torch::Tensor &images)
  **/
 torch::Tensor Conv2d::removePad(torch::Tensor image)
 {
-    int startPadDim1 = padSizeDim1[0];
-    int endPadDim1 = padSizeDim1[1];
-    int startPadDim2 = padSizeDim2[0];
-    int endPadDim2 = padSizeDim2[1];
+    int startPadDim1 = Conv2d::padSizeDim1[0];
+    int endPadDim1 = Conv2d::padSizeDim1[1];
+    int startPadDim2 = Conv2d::padSizeDim2[0];
+    int endPadDim2 = Conv2d::padSizeDim2[1];
     auto imageSize = image.sizes();
     return image.index({torch::indexing::Slice(), torch::indexing::Slice(startPadDim1, imageSize[1] - endPadDim1),
                         torch::indexing::Slice(startPadDim2, imageSize[2] - endPadDim2)});
@@ -106,9 +106,9 @@ torch::Tensor Conv2d::removePad(torch::Tensor image)
 
 torch::Tensor Conv2d::padImages(torch::Tensor &images)
 {
-    checkPaddingType(padding);
-    if (padding == "same")
-        return padImagesSame(images);
+    Conv2d::checkPaddingType(Conv2d::padding);
+    if (Conv2d::padding == "same")
+        return Conv2d::padImagesSame(images);
 }
 
 std::vector<int> Conv2d::getForwardOutputShape(int inputSizeDim1, int inputSizeDim2)
@@ -126,21 +126,21 @@ torch::Tensor Conv2d::convolve(torch::Tensor &slice, torch::Tensor &kernel, torc
 torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) 
 {
     Conv2d::inputTensor = inputTensor;
-    batchSize = inputTensor.sizes()[0];
+    Conv2d::batchSize = inputTensor.sizes()[0];
     auto inputSizeDim1 = inputTensor.sizes()[2];
     auto inputSizeDim2 = inputTensor.sizes()[3];
     inputTensorPadded = Conv2d::padImages(inputTensor);
 
-    forwardOutputShape = Conv2d::getForwardOutputShape(inputSizeDim1, inputSizeDim2);
-    int outputSizeDim1 = forwardOutputShape[2];
-    int outputSizeDim2 = forwardOutputShape[3];
-    torch::Tensor forwardOutput = torch::empty({batchSize, outChannels, outputSizeDim1, outputSizeDim2}, torch::kCUDA);
+    Conv2d::forwardOutputShape = Conv2d::getForwardOutputShape(inputSizeDim1, inputSizeDim2);
+    int outputSizeDim1 = Conv2d::forwardOutputShape[2];
+    int outputSizeDim2 = Conv2d::forwardOutputShape[3];
+    torch::Tensor forwardOutput = torch::empty({Conv2d::batchSize, outChannels, outputSizeDim1, outputSizeDim2}, torch::kCUDA);
 
-    for (int n = 0; n < batchSize; ++n)
+    for (int n = 0; n < Conv2d::batchSize; ++n)
     {
         for (int outChannel = 0; outChannel < outChannels; ++outChannel)
         {
-            torch::Tensor kernel = weights.index({outChannel});
+            torch::Tensor kernel = Conv2d::weights.index({outChannel});
             torch::Tensor bias = Conv2d::bias.index({outChannel});
 
             for (int i = 0; i < outputSizeDim1; ++i)
@@ -155,7 +155,7 @@ torch::Tensor Conv2d::forward(torch::Tensor &inputTensor)
                         {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
                          torch::indexing::Slice(startDim2, endDim2)});
 
-                    forwardOutput.index_put_({n, outChannel, i, j}, convolve(slice, kernel, bias).to(torch::kCUDA));
+                    forwardOutput.index_put_({n, outChannel, i, j}, Conv2d::convolve(slice, kernel, bias).to(torch::kCUDA));
                 }
             }
         }
@@ -171,32 +171,32 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
 
     torch::Tensor backwardOutput = torch::empty_like(inputTensor);
     torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
-    gradWeight = torch::empty_like(weights);
-    gradBias = torch::empty({outChannels, 1, 1, 1}, torch::kCUDA);
+    Conv2d::gradWeight = torch::empty_like(weights);
+    Conv2d::gradBias = torch::empty({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA);
 
-    for (int n = 0; n < batchSize; ++n)
+    for (int n = 0; n < Conv2d::batchSize; ++n)
     {
-        for (int outChannel = 0; outChannel < outChannels; ++outChannel)
+        for (int outChannel = 0; outChannel < Conv2d::outChannels; ++outChannel)
         {
             for (int i = 0; i < outputSizeDim1; ++i)
             {
                 for (int j = 0; j < outputSizeDim2; ++j)
                 {
-                    int startDim1 = i * strideDim1;
-                    int endDim1 = startDim1 + kernelSizeDim1;
-                    int startDim2 = j * strideDim2;
-                    int endDim2 = startDim2 + kernelSizeDim2;
+                    int startDim1 = i * Conv2d::strideDim1;
+                    int endDim1 = startDim1 + Conv2d::kernelSizeDim1;
+                    int startDim2 = j * Conv2d::strideDim2;
+                    int endDim2 = startDim2 + Conv2d::kernelSizeDim2;
                     torch::Tensor slice = inputTensorPadded.index(
                         {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
-                         torch::indexing::Slice(startDim2, endDim2)});
+                         torch::indexing::Slice(startDim2, endDim2)}).to(torch::kCUDA);
 
-                    gradWeight.index_put_({outChannel}, gradWeight.index({outChannel}) +
+                    Conv2d::gradWeight.index_put_({outChannel}, gradWeight.index({outChannel}) +
                                                             slice * errorTensor.index({n, outChannel, i, j}));
-                    gradBias.index_put_({outChannel},
+                    Conv2d::gradBias.index_put_({outChannel},
                                         gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
                     gradInput.index_put_({n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
                                           torch::indexing::Slice(startDim2, endDim2)},
-                                         errorTensor.index({n, outChannel, i, j}) * weights.index({outChannel}) +
+                                         errorTensor.index({n, outChannel, i, j}) * Conv2d::weights.index({outChannel}) +
                                              gradInput.index({n, torch::indexing::Slice(),
                                                               torch::indexing::Slice(startDim1, endDim1),
                                                               torch::indexing::Slice(startDim2, endDim2)}));
@@ -205,6 +205,10 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
         }
         backwardOutput.index_put_({n}, Conv2d::removePad(gradInput.index({n})));
     }
-    optimizer->update(weights, gradWeight);
+
+    std::cout << Conv2d::gradWeight << "\n";
+    optimizer->update(Conv2d::weights, Conv2d::gradWeight);
+    // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
+
     return backwardOutput;
 }
