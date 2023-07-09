@@ -6,7 +6,7 @@ ReLU::ReLU() {}
 
 torch::Tensor ReLU::forward(torch::Tensor &x)
 {
-    pos = x.greater_(0);
+    ReLU::pos = x.greater_(0);
     return torch::max(x, torch::zeros_like(x, torch::kCUDA));
 }
 

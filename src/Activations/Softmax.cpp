@@ -1,11 +1,12 @@
 #include "Softmax.hpp"
+#include "iostream"
 
 using namespace DeepStorm::Activations;
 
 SoftMax::SoftMax()
 {
-    trainable = false;
-    initializable = false;
+    SoftMax::trainable = false;
+    SoftMax::initializable = false;
 }
 
 torch::Tensor SoftMax::forward(torch::Tensor &x) 
@@ -13,14 +14,14 @@ torch::Tensor SoftMax::forward(torch::Tensor &x)
     auto max_val = x.amax({-1}, true);
     auto exp_x = torch::exp(x - max_val);
     auto sum_exp_x = exp_x.sum(-1, true);
-    softmaxOutput = exp_x / sum_exp_x;
-    return softmaxOutput;
+    SoftMax::softmaxOutput = exp_x / sum_exp_x;
+    return SoftMax::softmaxOutput;
 }
 
 torch::Tensor SoftMax::backward(torch::Tensor &y) 
 {
-    const auto batch_size = softmaxOutput.size(0);
-    const auto num_classes = softmaxOutput.size(1);
+    const auto batch_size = SoftMax::softmaxOutput.size(0);
+    const auto num_classes = SoftMax::softmaxOutput.size(1);
     auto jacobian = torch::zeros({batch_size, num_classes, num_classes}, torch::kCUDA);
     for (int i = 0; i < batch_size; ++i)
     {
@@ -30,11 +31,11 @@ torch::Tensor SoftMax::backward(torch::Tensor &y)
             {
                 if (j == k)
                 {
-                    jacobian[i][j][k] = softmaxOutput[i][j] * (1 - softmaxOutput[i][j]);
+                    jacobian[i][j][k] = SoftMax::softmaxOutput[i][j] * (1 - SoftMax::softmaxOutput[i][j]);
                 }
                 else
                 {
-                    jacobian[i][j][k] = -softmaxOutput[i][j] * softmaxOutput[i][k];
+                    jacobian[i][j][k] = -SoftMax::softmaxOutput[i][j] * SoftMax::softmaxOutput[i][k];
                 }
             }
         }
