@@ -1,4 +1,5 @@
 #include "BatchNormalization.hpp"
+#include "iostream"
 
 using namespace DeepStorm::Layers;
 
@@ -66,8 +67,8 @@ torch::Tensor BatchNorm2d::backward(torch::Tensor &errorTensor)
     torch::Tensor gradientInputNormalized = errorTensor * BatchNorm2d::weight.unsqueeze(0).unsqueeze(2).unsqueeze(3);
 
     torch::Tensor gradientInputTensor =
-        1 / (BatchNorm2d::batchSize * torch::sqrt(BatchNorm2d::variance.unsqueeze(0).unsqueeze(2).unsqueeze(3) + BatchNorm2d::eps) *
-                 (BatchNorm2d::batchSize * gradientInputNormalized - gradientInputNormalized.sum({0})) -
+        1 / (BatchNorm2d::batchSize * torch::sqrt(BatchNorm2d::variance.unsqueeze(0).unsqueeze(2).unsqueeze(3) + BatchNorm2d::eps)) *
+                 (BatchNorm2d::batchSize * gradientInputNormalized - gradientInputNormalized.sum({0}) -
              BatchNorm2d::inputTensorNormalized * torch::sum(gradientInputNormalized * BatchNorm2d::inputTensorNormalized, {0}));
 
     BatchNorm2d::optimizer->update(BatchNorm2d::weight, gradientWeight);
