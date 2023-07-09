@@ -26,7 +26,7 @@ torch::Tensor Model::forward(torch::Tensor x)
 
 void Model::backward(torch::Tensor y)
 {
-    for (auto it = Model::layers.begin(); it != layers.end(); it++)
+    for (auto it = Model::layers.rbegin(); it != Model::layers.rend(); it++)
     {
         y = (*it)->backward(y);
     }
