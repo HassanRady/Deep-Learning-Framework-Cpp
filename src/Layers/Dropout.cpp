@@ -2,23 +2,25 @@
 
 using namespace DeepStorm::Layers;
 
-Dropout::Dropout(float probability = 0.5) : probability(probability)
+Dropout::Dropout(float probability = 0.5)
 {
+    Dropout::probability = probability;
     Dropout::trainable = false;
     Dropout::initializable = false;
 }
 
-torch::Tensor Dropout::forward(torch::Tensor &inputTensor) 
+torch::Tensor Dropout::forward(torch::Tensor &inputTensor)
 {
-    if (Dropout::training)
+    if (!Dropout::training)
         return inputTensor;
 
     auto tensorShape = inputTensor.sizes();
     Dropout::mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(inputTensor.device());
-    return Dropout::mask * inputTensor;
+    Dropout::mask = Dropout::mask.less(Dropout::probability);
+    return Dropout::mask * inputTensor / Dropout::probability;
 }
 
-torch::Tensor Dropout::backward(torch::Tensor &errorTensor) 
+torch::Tensor Dropout::backward(torch::Tensor &errorTensor)
 {
     auto out = errorTensor * Dropout::mask;
     out = out / Dropout::probability;
