@@ -21,6 +21,7 @@
 #include "Trainer.hpp"
 #include "CrossEntropy.hpp"
 
+
 using namespace std;
 
 using namespace DeepStorm;
@@ -33,6 +34,7 @@ using namespace DeepStorm::Losses;
 
 int main()
 {
+    torch::manual_seed(1);
 
     auto batchSize = 2;
     auto inChannels = 1;
