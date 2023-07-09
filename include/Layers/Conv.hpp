@@ -46,6 +46,7 @@ namespace DeepStorm
 
             Optimizer *optimizer;
 
+        torch::Tensor weights;
         private:
             int batchSize;
 
@@ -66,7 +67,6 @@ namespace DeepStorm
 
             WeightInitializer *weightInitializer;
             WeightInitializer *biasInitializer;
-            torch::Tensor weights;
             torch::Tensor bias;
             torch::Tensor gradWeight;
             torch::Tensor gradBias;
