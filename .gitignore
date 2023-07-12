@@ -187,6 +187,7 @@ _deps
 
 Libraries/*
 build/*
+libs/*
 
 main.cpp
 example2.cpp

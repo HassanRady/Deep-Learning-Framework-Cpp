@@ -3,7 +3,7 @@ project(DeepStorm)
 
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libtorch")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/libtorch")
 
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
