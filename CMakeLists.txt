@@ -3,7 +3,7 @@ project(DeepStorm)
 
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/libtorch")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Libraries/libtorch")
 
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -26,6 +26,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 file(GLOB SOURCES "src/*/*.cpp" example.cpp)
 
 add_executable(DeepStorm ${SOURCES})
+
 
 target_link_libraries(DeepStorm "${TORCH_LIBRARIES}")
 target_link_libraries(DeepStorm "${OpenCV_LIBS}")
