@@ -13,7 +13,7 @@ namespace DeepStorm
         class Linear : public Layer
         {
         public:
-            Linear(int inFeatures, int outFeatures, WeightInitializer *weightInitializer, WeightInitializer *biasInitializer);
+            Linear(int inFeatures, int outFeatures, WeightInitializer *weightInitializer, WeightInitializer *biasInitializer, Optimizer * optimizer);
 
             void initialize();
 

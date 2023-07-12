@@ -4,7 +4,7 @@ using namespace DeepStorm::Layers;
 
 Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelSize, torch::ExpandingArray<2> stride,
        std::string padding,
-       WeightInitializer *weightInitializer, WeightInitializer *biasInitializer)
+       WeightInitializer *weightInitializer, WeightInitializer *biasInitializer, Optimizer * optimizer)
 {
     Conv2d::trainable = true;
     Conv2d::initializable = true;
@@ -22,6 +22,8 @@ Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelS
 
     Conv2d::weightInitializer = weightInitializer;
     Conv2d::biasInitializer = biasInitializer;
+
+    Conv2d::optimizer = optimizer;
 
     Conv2d::initialize();
 }
@@ -190,7 +192,7 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
                         {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
                          torch::indexing::Slice(startDim2, endDim2)}).to(torch::kCUDA);
 
-                    Conv2d::gradWeight.index_put_({outChannel}, gradWeight.index({outChannel}) +
+                    Conv2d::gradWeight.index_put_({outChannel}, Conv2d::gradWeight.index({outChannel}) +
                                                             slice * errorTensor.index({n, outChannel, i, j}));
                     Conv2d::gradBias.index_put_({outChannel},
                                         gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
@@ -206,7 +208,6 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
         backwardOutput.index_put_({n}, Conv2d::removePad(gradInput.index({n})));
     }
 
-    std::cout << Conv2d::gradWeight << "\n";
     optimizer->update(Conv2d::weights, Conv2d::gradWeight);
     // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
 

@@ -17,7 +17,7 @@ namespace DeepStorm
         {
         public:
             Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelSize, torch::ExpandingArray<2> stride,
-                   std::string padding, WeightInitializer *weightInitializer, WeightInitializer *biasInitializer);
+                   std::string padding, WeightInitializer *weightInitializer, WeightInitializer *biasInitializer, Optimizer * optimizer);
 
             void initialize();
 

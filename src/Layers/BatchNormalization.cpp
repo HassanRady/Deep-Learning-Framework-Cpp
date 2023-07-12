@@ -3,7 +3,7 @@
 
 using namespace DeepStorm::Layers;
 
-BatchNorm2d::BatchNorm2d(int numFeatures, float eps = 1e-11, float momentum = 0.8)
+BatchNorm2d::BatchNorm2d(int numFeatures, Optimizer * optimizer, float eps = 1e-11, float momentum = 0.8)
 {
     trainable = true;
     initializable = false;
@@ -17,6 +17,8 @@ BatchNorm2d::BatchNorm2d(int numFeatures, float eps = 1e-11, float momentum = 0.
 
     BatchNorm2d::mean = torch::zeros({numFeatures}, torch::kCUDA);
     BatchNorm2d::variance = torch::ones({numFeatures}, torch::kCUDA);
+
+    BatchNorm2d::optimizer = optimizer;
 }
 
 torch::Tensor BatchNorm2d::normalizeTrain(torch::Tensor &tensor)
@@ -31,6 +33,7 @@ torch::Tensor BatchNorm2d::normalizeTrain(torch::Tensor &tensor)
 
     BatchNorm2d::inputTensorNormalized = (tensor - batchMean.unsqueeze(0).unsqueeze(2).unsqueeze(3)) /
                             batchStd.unsqueeze(0).unsqueeze(2).unsqueeze(3);
+
     torch::Tensor inputBatchNormalized = BatchNorm2d::weight.unsqueeze(0).unsqueeze(2).unsqueeze(3) * BatchNorm2d::inputTensorNormalized +
                                          BatchNorm2d::bias.unsqueeze(0).unsqueeze(2).unsqueeze(3);
     return inputBatchNormalized;
