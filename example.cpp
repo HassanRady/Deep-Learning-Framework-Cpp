@@ -67,7 +67,7 @@ int main()
     auto trainset = ImgDataset("./data/trainset", 1, (unsigned)1);
     auto valset = ImgDataset("./data/trainset", 1, (unsigned)2);
 
-    trainset.resize(12);
+    trainset.resize(8);
     valset.resize(2);
 
     auto trainLoader = torch::data::make_data_loader(std::move(trainset.map(torch::data::transforms::Stack<>())),
@@ -79,5 +79,5 @@ int main()
 
     auto trainer = Trainer(model, &loss, batchSize);
 
-    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 1);
+    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 3);
 }
