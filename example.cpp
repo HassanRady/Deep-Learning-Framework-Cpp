@@ -28,7 +28,7 @@ using namespace DeepStorm;
 using namespace DeepStorm::Layers;
 using namespace DeepStorm::Activations;
 using namespace DeepStorm::Optimizers;
-// using namespace DeepStorm::Initializers;
+using namespace DeepStorm::Initializers;
 using namespace DeepStorm::Datasets;
 using namespace DeepStorm::Losses;
 
@@ -44,30 +44,24 @@ int main()
     auto padding = "same";
     auto classes = 10;
 
-    // DeepStorm::WeightInitializer* wInit = &DeepStorm::Initializers::He();
 
-    Initializers::He wInit = Initializers::He();
-
-    DeepStorm::Initializers::Constant bInit(1);
-
-    Adam optimizer();
     CrossEntropyLoss loss(1e-09);
 
     Model model = Model();
 
-    model.append(new Conv2d(inChannels, outChannels, filterSize, stride, padding, &wInit, &bInit));
-    model.append(new BatchNorm2d(16, 1e-11, 0.8));
+    model.append(new Conv2d(inChannels, outChannels, filterSize, stride, padding, new He(), new Constant(1), new Adam(0.001, 0.9, 0.9, 1e-07)));
+    model.append(new BatchNorm2d(16, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
     model.append(new Dropout(0.3));
     model.append(new ReLU());
     model.append(new MaxPool2d(2, 2));
-    model.append(new Conv2d(outChannels, outChannels, filterSize, stride, padding, &wInit, &bInit));
-    model.append(new BatchNorm2d(16, 1e-11, 0.8));
+    model.append(new Conv2d(outChannels, outChannels, filterSize, stride, padding, new He(), new Constant(1), new Adam(0.001, 0.9, 0.9, 1e-07)));
+    model.append(new BatchNorm2d(16, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
     model.append(new ReLU());
     model.append(new MaxPool2d(2, 2));
     model.append(new Flatten());
-    model.append(new Linear(outChannels*7*7, 32, &wInit, &bInit));
+    model.append(new Linear(outChannels*7*7, 32, new He(), new Constant(1), new Adam(0.001, 0.9, 0.9, 1e-07)));
     model.append(new ReLU());
-    model.append(new Linear(32, classes, &wInit, &bInit));
+    model.append(new Linear(32, classes, new He(), new Constant(1), new Adam(0.001, 0.9, 0.9, 1e-07)));
     model.append(new SoftMax());
 
     auto trainset = ImgDataset("./data/trainset", 1, (unsigned)1);
@@ -85,5 +79,5 @@ int main()
 
     auto trainer = Trainer(model, &loss, batchSize);
 
-    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 3);
+    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 1);
 }
