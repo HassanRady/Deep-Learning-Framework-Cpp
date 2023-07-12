@@ -102,10 +102,10 @@ namespace DeepStorm
                 std::cout << "Epoch: " << i << "\n";
 
                 auto [trainLoss, trainPred] = trainEpoch(trainLoader);
-                auto [valLoss, valPred] = valEpoch(valLoader);
+                // auto [valLoss, valPred] = valEpoch(valLoader);
 
                 trainLosses.push_back(trainLoss);
-                valLosses.push_back(valLoss);
+                // valLosses.push_back(valLoss);
                 //            trainPreds.insert(trainPreds);
                 //            valPreds.insert(valPreds);
 
