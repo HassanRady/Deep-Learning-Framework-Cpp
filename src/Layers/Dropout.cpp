@@ -17,7 +17,7 @@ torch::Tensor Dropout::forward(torch::Tensor &inputTensor)
     auto tensorShape = inputTensor.sizes();
     Dropout::mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(inputTensor.device());
     Dropout::mask = Dropout::mask.less(Dropout::probability);
-    return Dropout::mask * inputTensor / Dropout::probability;
+    return inputTensor * Dropout::mask  / Dropout::probability;
 }
 
 torch::Tensor Dropout::backward(torch::Tensor &errorTensor)
