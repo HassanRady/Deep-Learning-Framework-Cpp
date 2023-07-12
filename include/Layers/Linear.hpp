@@ -17,6 +17,9 @@ namespace DeepStorm
 
             void initialize();
 
+            /*
+            inputTensor shape: BATCHxFEATURES
+            */
             torch::Tensor forward(torch::Tensor &inputTensor) override;
 
             torch::Tensor backward(torch::Tensor &errorTensor) override;
