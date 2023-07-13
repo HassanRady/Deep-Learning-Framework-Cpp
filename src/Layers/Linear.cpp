@@ -29,19 +29,19 @@ void Linear::initialize()
     Linear::weights = torch::cat({Linear::weights, Linear::bias}, 0);
 }
 
-torch::Tensor Linear::forward(torch::Tensor &inputTensor) 
+void Linear::forward(torch::Tensor &x) 
 {
-    auto inputDims = inputTensor.sizes();
+    auto inputDims = x.sizes();
     batchSize = inputDims[0];
 
-    Linear::inputTensor = torch::cat({inputTensor, torch::ones({batchSize, 1}, torch::kCUDA)}, -1);
-    return torch::matmul(Linear::inputTensor, Linear::weights);
+    Linear::inputTensor = torch::cat({x, torch::ones({batchSize, 1}, torch::kCUDA)}, -1);
+    x = torch::matmul(Linear::inputTensor, Linear::weights);
 }
 
-torch::Tensor Linear::backward(torch::Tensor &errorTensor) 
+void Linear::backward(torch::Tensor &errorTensor) 
 {
     Linear::gradientWeights = torch::matmul(Linear::inputTensor.transpose(1, 0), errorTensor);
 
     optimizer->update(Linear::weights, Linear::gradientWeights);
-    return torch::matmul(errorTensor, Linear::weights.transpose(1, 0)).index({torch::indexing::Slice(), torch::indexing::Slice(0, Linear::inFeatures)});
+    errorTensor = torch::matmul(errorTensor, Linear::weights.transpose(1, 0)).index({torch::indexing::Slice(), torch::indexing::Slice(0, Linear::inFeatures)});
 }

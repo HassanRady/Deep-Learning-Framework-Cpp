@@ -9,16 +9,16 @@ SoftMax::SoftMax()
     SoftMax::initializable = false;
 }
 
-torch::Tensor SoftMax::forward(torch::Tensor &x) 
+void SoftMax::forward(torch::Tensor &x) 
 {
     auto max_val = x.amax({-1}, true);
     auto exp_x = torch::exp(x - max_val);
     auto sum_exp_x = exp_x.sum(-1, true);
     SoftMax::softmaxOutput = exp_x / sum_exp_x;
-    return SoftMax::softmaxOutput;
+    x = SoftMax::softmaxOutput;
 }
 
-torch::Tensor SoftMax::backward(torch::Tensor &y) 
+void SoftMax::backward(torch::Tensor &y) 
 {
     const auto batch_size = SoftMax::softmaxOutput.size(0);
     const auto num_classes = SoftMax::softmaxOutput.size(1);
@@ -41,6 +41,5 @@ torch::Tensor SoftMax::backward(torch::Tensor &y)
         }
     }
 
-    auto out = torch::matmul(jacobian, y.unsqueeze(-1));
-    return out.squeeze();
+    y = torch::matmul(jacobian, y.unsqueeze(-1)).squeeze();
 }

@@ -19,9 +19,9 @@ namespace DeepStorm
 
             torch::Tensor normalizeTest(torch::Tensor &tensor);
 
-            torch::Tensor forward(torch::Tensor &inputTensor) override;
+            void forward(torch::Tensor &x) override;
 
-            torch::Tensor backward(torch::Tensor &errorTensor) override;
+            void backward(torch::Tensor &errorTensor) override;
 
             Optimizer *optimizer;
 

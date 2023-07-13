@@ -40,9 +40,9 @@ namespace DeepStorm
 
             torch::Tensor convolve(torch::Tensor &slice, torch::Tensor &kernel, torch::Tensor &bias);
 
-            torch::Tensor forward(torch::Tensor &inputTensor) override;
+            void forward(torch::Tensor &x) override;
 
-            torch::Tensor backward(torch::Tensor &errorTensor) override;
+            void backward(torch::Tensor &errorTensor) override;
 
             Optimizer *optimizer;
 

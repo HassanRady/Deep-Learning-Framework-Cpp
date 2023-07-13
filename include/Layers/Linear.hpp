@@ -20,9 +20,9 @@ namespace DeepStorm
             /*
             inputTensor shape: BATCHxFEATURES
             */
-            torch::Tensor forward(torch::Tensor &inputTensor) override;
+            void forward(torch::Tensor &inputTensor) override;
 
-            torch::Tensor backward(torch::Tensor &errorTensor) override;
+            void backward(torch::Tensor &errorTensor) override;
 
             Optimizer *optimizer;
 

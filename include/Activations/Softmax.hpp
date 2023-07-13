@@ -12,9 +12,9 @@ namespace DeepStorm
         {
         public:
             SoftMax();
-            torch::Tensor forward(torch::Tensor &x) override;
+            void forward(torch::Tensor &x) override;
 
-            torch::Tensor backward(torch::Tensor &y) override;
+            void backward(torch::Tensor &y) override;
 
         private:
             torch::Tensor softmaxOutput;

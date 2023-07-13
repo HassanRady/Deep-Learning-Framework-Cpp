@@ -14,9 +14,9 @@ namespace DeepStorm
         public:
             Flatten();
 
-            torch::Tensor forward(torch::Tensor &inputTensor) override;
+            void forward(torch::Tensor &inputTensor) override;
 
-            torch::Tensor backward(torch::Tensor &errorTensor) override;
+            void backward(torch::Tensor &errorTensor) override;
 
         private:
             torch::Tensor inputTensor;

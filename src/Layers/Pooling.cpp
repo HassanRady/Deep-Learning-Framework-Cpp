@@ -26,13 +26,13 @@ std::vector<int> MaxPool2d::getForwardOutputShape(int inputSizeDim1, int inputSi
     return {batchSize, outChannels, outputSizeDim1, outputSizeDim2};
 }
 
-torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor) 
+void MaxPool2d::forward(torch::Tensor &x) 
 {
-    this->inputTensor = inputTensor;
-    batchSize = inputTensor.sizes()[0];
-    outChannels = inputTensor.sizes()[1];
-    int inputSizeDim1 = inputTensor.sizes()[2];
-    int inputSizeDim2 = inputTensor.sizes()[3];
+    MaxPool2d::inputTensor = x;
+    batchSize = x.sizes()[0];
+    outChannels = x.sizes()[1];
+    int inputSizeDim1 = x.sizes()[2];
+    int inputSizeDim2 = x.sizes()[3];
 
     std::vector<int> forwardOutputShape = MaxPool2d::getForwardOutputShape(inputSizeDim1, inputSizeDim2);
     int outputSizeDim1 = forwardOutputShape[2];
@@ -52,7 +52,7 @@ torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor)
                     int endDim1 = startDim1 + kernelSizeDim1;
                     int startDim2 = j * strideSizeDim2;
                     int endDim2 = startDim2 + kernelSizeDim2;
-                    torch::Tensor slice = inputTensor.index(
+                    torch::Tensor slice = x.index(
                         {n, outChannel, torch::indexing::Slice(startDim1, endDim1),
                          torch::indexing::Slice(startDim2, endDim2)});
                     output.index_put_({n, outChannel, i, j}, torch::max(slice));
@@ -60,10 +60,10 @@ torch::Tensor MaxPool2d::forward(torch::Tensor &inputTensor)
             }
         }
     }
-    return output;
+    x = output;
 }
 
-torch::Tensor MaxPool2d::backward(torch::Tensor &errorTensor) 
+void MaxPool2d::backward(torch::Tensor &errorTensor) 
 {
     int outputSizeDim1 = errorTensor.sizes()[2];
     int outputSizeDim2 = errorTensor.sizes()[3];
@@ -96,5 +96,5 @@ torch::Tensor MaxPool2d::backward(torch::Tensor &errorTensor)
         }
     }
 
-    return gradInput;
+    errorTensor = gradInput;
 }

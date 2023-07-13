@@ -19,9 +19,9 @@ namespace DeepStorm
 
         void append(Layer *layer);
 
-        torch::Tensor forward(torch::Tensor x);
+        torch::Tensor forward(torch::Tensor& x);
 
-        void backward(torch::Tensor y);
+        void backward(torch::Tensor& y);
 
         void eval();
 

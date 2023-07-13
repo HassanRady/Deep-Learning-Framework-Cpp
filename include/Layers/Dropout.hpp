@@ -14,9 +14,9 @@ namespace DeepStorm
         public:
             Dropout(float probability);
 
-            torch::Tensor forward(torch::Tensor &inputTensor) override;
+            void forward(torch::Tensor &x) override;
 
-            torch::Tensor backward(torch::Tensor &errorTensor) override;
+            void backward(torch::Tensor &errorTensor) override;
 
         private:
             float probability;

@@ -8,21 +8,19 @@ Flatten::Flatten()
     initializable = false;
 }
 
-torch::Tensor Flatten::forward(torch::Tensor &inputTensor) 
+void Flatten::forward(torch::Tensor &x) 
 {
-    Flatten::inputTensor = inputTensor;
-    auto inputTensorDims = inputTensor.sizes();
+    Flatten::inputTensor = x;
+    auto inputTensorDims = x.sizes();
     int denseFeatures = 1;
     for (int dim = 1; dim < inputTensorDims.size(); ++dim)
     {
         denseFeatures *= inputTensorDims[dim];
     }
-    auto flattenTensor = inputTensor.reshape({inputTensor.sizes()[0], inputTensor.sizes()[1] * inputTensor.sizes()[2] * inputTensor.sizes()[3]});
-    return flattenTensor;
+    x = x.reshape({x.sizes()[0], x.sizes()[1] * x.sizes()[2] * x.sizes()[3]});
 }
 
-torch::Tensor Flatten::backward(torch::Tensor &errorTensor) 
+void Flatten::backward(torch::Tensor &errorTensor) 
 {
-    auto reshapedTensor = errorTensor.reshape(Flatten::inputTensor.sizes());
-    return reshapedTensor;
+    errorTensor = errorTensor.reshape(Flatten::inputTensor.sizes());
 }

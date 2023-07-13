@@ -8,9 +8,9 @@ namespace DeepStorm
     class Layer
     {
     public:
-        virtual torch::Tensor forward(torch::Tensor &tensor) = 0;
+        virtual void forward(torch::Tensor &tensor) = 0;
 
-        virtual torch::Tensor backward(torch::Tensor &tensor) = 0;
+        virtual void backward(torch::Tensor &tensor) = 0;
 
         void train() {
             training = true;

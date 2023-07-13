@@ -15,20 +15,20 @@ void Model::append(Layer *layer)
     Model::layers.emplace_back(layer);
 }
 
-torch::Tensor Model::forward(torch::Tensor x)
+torch::Tensor Model::forward(torch::Tensor& x)
 {
     for (auto it = Model::layers.begin(); it != layers.end(); it++)
     {
-        x = (*it)->forward(x);
+        (*it)->forward(x);
     }
     return x;
 }
 
-void Model::backward(torch::Tensor y)
+void Model::backward(torch::Tensor& y)
 {
     for (auto it = Model::layers.rbegin(); it != Model::layers.rend(); it++)
     {
-        y = (*it)->backward(y);
+        (*it)->backward(y);
     }
 }
 

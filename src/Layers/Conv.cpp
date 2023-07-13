@@ -125,13 +125,13 @@ torch::Tensor Conv2d::convolve(torch::Tensor &slice, torch::Tensor &kernel, torc
     return torch::sum(slice * kernel) + bias;
 }
 
-torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) 
+void Conv2d::forward(torch::Tensor &x) 
 {
-    Conv2d::inputTensor = inputTensor;
-    Conv2d::batchSize = inputTensor.sizes()[0];
-    auto inputSizeDim1 = inputTensor.sizes()[2];
-    auto inputSizeDim2 = inputTensor.sizes()[3];
-    inputTensorPadded = Conv2d::padImages(inputTensor);
+    Conv2d::inputTensor = x;
+    Conv2d::batchSize = x.sizes()[0];
+    auto inputSizeDim1 = x.sizes()[2];
+    auto inputSizeDim2 = x.sizes()[3];
+    inputTensorPadded = Conv2d::padImages(x);
 
     Conv2d::forwardOutputShape = Conv2d::getForwardOutputShape(inputSizeDim1, inputSizeDim2);
     int outputSizeDim1 = Conv2d::forwardOutputShape[2];
@@ -163,17 +163,17 @@ torch::Tensor Conv2d::forward(torch::Tensor &inputTensor)
         }
     }
 
-    return forwardOutput;
+    x = forwardOutput;
 }
 
-torch::Tensor Conv2d::backward(torch::Tensor &errorTensor) 
+void Conv2d::backward(torch::Tensor &errorTensor) 
 {
     int outputSizeDim1 = errorTensor.sizes()[2];
     int outputSizeDim2 = errorTensor.sizes()[3];
 
-    torch::Tensor backwardOutput = torch::empty_like(inputTensor);
-    torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
-    Conv2d::gradWeight = torch::empty_like(weights);
+    torch::Tensor backwardOutput = torch::empty_like(Conv2d::inputTensor);
+    torch::Tensor gradInput = torch::empty_like(Conv2d::inputTensorPadded);
+    Conv2d::gradWeight = torch::empty_like(Conv2d::weights);
     Conv2d::gradBias = torch::empty({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA);
 
     for (int n = 0; n < Conv2d::batchSize; ++n)
@@ -211,5 +211,5 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
     optimizer->update(Conv2d::weights, Conv2d::gradWeight);
     // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
 
-    return backwardOutput;
+    errorTensor = backwardOutput;
 }

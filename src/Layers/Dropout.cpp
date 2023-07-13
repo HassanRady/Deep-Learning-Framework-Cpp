@@ -9,21 +9,19 @@ Dropout::Dropout(float probability = 0.5)
     Dropout::initializable = false;
 }
 
-torch::Tensor Dropout::forward(torch::Tensor &inputTensor)
+void Dropout::forward(torch::Tensor &x)
 {
     if (!Dropout::training)
-        return inputTensor;
+        return;
 
-    auto tensorShape = inputTensor.sizes();
-    Dropout::mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(inputTensor.device());
+    auto tensorShape = x.sizes();
+    Dropout::mask = torch::rand({tensorShape[tensorShape.size() - 2], tensorShape[tensorShape.size() - 1]}).to(x.device());
     Dropout::mask = torch::less(Dropout::mask, Dropout::probability);
 
-    return inputTensor * Dropout::mask  / Dropout::probability;
+    x = x * Dropout::mask  / Dropout::probability;
 }
 
-torch::Tensor Dropout::backward(torch::Tensor &errorTensor)
+void Dropout::backward(torch::Tensor &errorTensor)
 {
-    auto out = errorTensor * Dropout::mask;
-    out = out / Dropout::probability;
-    return out;
+    errorTensor = (errorTensor * Dropout::mask)/Dropout::probability;
 }
