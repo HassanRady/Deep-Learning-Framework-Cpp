@@ -36,14 +36,13 @@ int main()
 {
     torch::manual_seed(1);
 
-    auto batchSize = 2;
+    auto batchSize = 4;
     auto inChannels = 1;
     auto filterSize = 3;
     auto outChannels = 16;
     auto stride = 1;
     auto padding = "same";
     auto classes = 10;
-
 
     CrossEntropyLoss loss(1e-09);
 
