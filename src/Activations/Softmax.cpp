@@ -11,9 +11,10 @@ SoftMax::SoftMax()
 
 torch::Tensor SoftMax::forward(torch::Tensor &x) 
 {
-    auto max_val = x.amax({-1}, true);
-    auto exp_x = torch::exp(x - max_val);
+    auto maxVal = x.amax({-1}, true);
+    auto exp_x = torch::exp(x - maxVal);
     auto sum_exp_x = exp_x.sum(-1, true);
+
     SoftMax::softmaxOutput = exp_x / sum_exp_x;
     return SoftMax::softmaxOutput;
 }
@@ -40,7 +41,6 @@ torch::Tensor SoftMax::backward(torch::Tensor &y)
             }
         }
     }
-
-    auto out = torch::matmul(jacobian, y.unsqueeze(-1));
-    return out.squeeze();
+    auto out = torch::matmul(jacobian, y.unsqueeze(-1)).squeeze();
+    return out;
 }
