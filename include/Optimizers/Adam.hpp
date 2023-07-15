@@ -12,14 +12,15 @@ namespace DeepStorm
         class Adam : public Optimizer
         {
         public:
-            Adam(double learningRate, double mu, double rho, double epsilon);
+            Adam(float learningRate, float mu, float rho, float epsilon);
 
             void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
 
             ~Adam() = default;
 
         private:
-            double mu, rho, epsilon, k = 0.0;
+            float mu, rho, epsilon;
+            float k = 0.0;
             torch::Tensor v = torch::zeros({1}, torch::kCUDA);
             torch::Tensor r = torch::zeros({1}, torch::kCUDA);
         };
