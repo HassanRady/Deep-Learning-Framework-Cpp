@@ -2,7 +2,7 @@
 
 using namespace DeepStorm::Optimizers;
 
-Adam::Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, double epsilon = 1e-07)
+Adam::Adam(float learningRate = 0.001, float mu = 0.9, float rho = 0.9, float epsilon = 1e-07)
 {
     Adam::learningRate = learningRate;
     Adam::mu = mu;
@@ -12,16 +12,13 @@ Adam::Adam(double learningRate = 0.001, double mu = 0.9, double rho = 0.9, doubl
 
 void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
-    k = k + 1;
+    Adam::k = Adam::k + 1;
 
-    v = mu * v + (1 - mu) * gradientTensor;
-    r = rho * r + (1 - rho) * gradientTensor.pow(2);
+    Adam::v = Adam::mu * Adam::v + (1 - Adam::mu) * gradientTensor;
+    Adam::r = Adam::rho * Adam::r + (1 - Adam::rho) * gradientTensor.pow(2);
 
-    v = mu * v + (1 - mu) * gradientTensor;
-    r = rho * r + (1 - rho) * gradientTensor.pow(2);
+    auto vHat = (Adam::v) / (1 - pow(Adam::mu, Adam::k));
+    auto rHat = (Adam::r) / (1 - pow(Adam::rho, Adam::k));
 
-    auto vHat = (v) / (1 - pow(mu, k));
-    auto rHat = (r) / (1 - pow(rho, k));
-
-    weightTensor = weightTensor - Adam::learningRate * (vHat) / (pow(rHat, 2) + Adam::epsilon);
+    weightTensor = weightTensor - Adam::learningRate * (vHat) / (pow(rHat, 0.5) + Adam::epsilon);
 }
