@@ -5,8 +5,9 @@ using namespace DeepStorm::Layers;
 
 BatchNorm2d::BatchNorm2d(int numFeatures, Optimizer * optimizer, float eps = 1e-11, float momentum = 0.8)
 {
-    trainable = true;
-    initializable = false;
+    BatchNorm2d::trainable = true;
+    BatchNorm2d::initializable = false;
+    BatchNorm2d::training = true;
 
     BatchNorm2d::numFeatures = numFeatures;
     BatchNorm2d::eps = eps;
@@ -28,8 +29,8 @@ torch::Tensor BatchNorm2d::normalizeTrain(torch::Tensor &tensor)
     torch::Tensor batchStd = torch::sqrt(batchVariance + BatchNorm2d::eps);
     auto n = tensor.numel() / tensor.sizes()[1];
 
-    mean = BatchNorm2d::momentum * batchMean + (1 - BatchNorm2d::momentum) * BatchNorm2d::mean;
-    variance = BatchNorm2d::momentum * batchVariance * n / (n - 1) + (1 - BatchNorm2d::momentum) * BatchNorm2d::variance;
+    BatchNorm2d::mean = BatchNorm2d::momentum * batchMean + (1 - BatchNorm2d::momentum) * BatchNorm2d::mean;
+    BatchNorm2d::variance = BatchNorm2d::momentum * batchVariance * n / (n - 1) + (1 - BatchNorm2d::momentum) * BatchNorm2d::variance;
 
     BatchNorm2d::inputTensorNormalized = (tensor - batchMean.unsqueeze(0).unsqueeze(2).unsqueeze(3)) /
                             batchStd.unsqueeze(0).unsqueeze(2).unsqueeze(3);
@@ -48,9 +49,8 @@ torch::Tensor BatchNorm2d::normalizeTest(torch::Tensor &tensor)
     return inputNormalized;
 }
 
-torch::Tensor BatchNorm2d::forward(torch::Tensor &inputTensor) 
+torch::Tensor BatchNorm2d::forward(torch::Tensor &inputTensor) // input shape BATCHxCHANNELSxHEIGHTxWIDTH
 {
-    BatchNorm2d::inputTensor = inputTensor;
     BatchNorm2d::batchSize = inputTensor.sizes()[0];
 
     torch::Tensor inputNormalized;
