@@ -38,7 +38,6 @@ namespace DeepStorm
             torch::Tensor mean;
             torch::Tensor variance;
 
-            torch::Tensor inputTensor;
             torch::Tensor inputTensorNormalized;
         };
     } // namespace Layers
