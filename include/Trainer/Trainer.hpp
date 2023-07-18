@@ -14,7 +14,7 @@ namespace DeepStorm
     class Trainer
     {
     public:
-        Trainer(Model &model, DeepStorm::Loss *loss, int batchSize);
+        Trainer(Model *model, DeepStorm::Loss *loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
@@ -32,7 +32,7 @@ namespace DeepStorm
         template <typename DataLoader>
         std::tuple<float, std::vector<torch::Tensor>> trainEpoch(DataLoader &loader)
         {
-            model.train();
+            model->train();
 
             std::vector<torch::Tensor> runningPreds;
             float runningLoss = 0.0;
@@ -62,7 +62,7 @@ namespace DeepStorm
         template <typename DataLoader>
         std::tuple<float, std::vector<torch::Tensor>> valEpoch(DataLoader &loader)
         {
-            model.eval();
+            model->eval();
 
             std::vector<torch::Tensor> runningPreds;
             float runningLoss = 0.0;
@@ -102,6 +102,7 @@ namespace DeepStorm
                 std::cout << "Epoch: " << i << "\n";
 
                 auto [trainLoss, trainPred] = trainEpoch(trainLoader);
+
                 // auto [valLoss, valPred] = valEpoch(valLoader);
 
                 trainLosses.push_back(trainLoss);
@@ -118,7 +119,7 @@ namespace DeepStorm
         }
 
     private:
-        DeepStorm::Model model;
+        DeepStorm::Model* model;
         DeepStorm::Loss *loss;
         int batchSize;
     };
