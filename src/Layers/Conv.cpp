@@ -3,8 +3,8 @@
 using namespace DeepStorm::Layers;
 
 Conv2d::Conv2d(int inChannels, int outChannels, torch::ExpandingArray<2> kernelSize, torch::ExpandingArray<2> stride,
-       std::string padding,
-       WeightInitializer *weightInitializer, WeightInitializer *biasInitializer, Optimizer * optimizer)
+               std::string padding,
+               WeightInitializer *weightInitializer, WeightInitializer *biasInitializer, Optimizer *optimizer)
 {
     Conv2d::trainable = true;
     Conv2d::initializable = true;
@@ -34,7 +34,7 @@ void Conv2d::initialize()
     Conv2d::bias = torch::empty({outChannels, 1}, torch::kCUDA);
 
     Conv2d::weightInitializer->initialize(Conv2d::weights, inChannels * kernelSizeDim1 * kernelSizeDim2,
-                                  kernelSizeDim1 * kernelSizeDim2 * outChannels);
+                                          kernelSizeDim1 * kernelSizeDim2 * outChannels);
     Conv2d::biasInitializer->initialize(bias, outChannels, 1);
 }
 
@@ -122,10 +122,11 @@ std::vector<int> Conv2d::getForwardOutputShape(int inputSizeDim1, int inputSizeD
 
 torch::Tensor Conv2d::convolve(torch::Tensor &slice, torch::Tensor &kernel, torch::Tensor &bias)
 {
-    return torch::sum(slice * kernel) + bias;
+    // return torch::sum(slice * kernel) + bias;
+    return torch::sum(slice * kernel);
 }
 
-torch::Tensor Conv2d::forward(torch::Tensor &inputTensor) 
+torch::Tensor Conv2d::forward(torch::Tensor &inputTensor)
 {
     Conv2d::inputTensor = inputTensor;
     Conv2d::batchSize = inputTensor.sizes()[0];
@@ -166,10 +167,10 @@ torch::Tensor Conv2d::forward(torch::Tensor &inputTensor)
     return forwardOutput;
 }
 
-torch::Tensor Conv2d::backward(torch::Tensor &errorTensor) 
+torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
 {
-    int outputSizeDim1 = errorTensor.sizes()[2];
-    int outputSizeDim2 = errorTensor.sizes()[3];
+    int outputSizeDim1 = Conv2d::forwardOutputShape[2];
+    int outputSizeDim2 = Conv2d::forwardOutputShape[3];
 
     torch::Tensor backwardOutput = torch::empty_like(inputTensor);
     torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
@@ -189,19 +190,20 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
                     int startDim2 = j * Conv2d::strideDim2;
                     int endDim2 = startDim2 + Conv2d::kernelSizeDim2;
                     torch::Tensor slice = inputTensorPadded.index(
-                        {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
-                         torch::indexing::Slice(startDim2, endDim2)}).to(torch::kCUDA);
+                                                               {n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
+                                                                torch::indexing::Slice(startDim2, endDim2)})
+                                              .to(torch::kCUDA);
 
                     Conv2d::gradWeight.index_put_({outChannel}, Conv2d::gradWeight.index({outChannel}) +
-                                                            slice * errorTensor.index({n, outChannel, i, j}));
+                                                                    slice * errorTensor.index({n, outChannel, i, j}));
                     Conv2d::gradBias.index_put_({outChannel},
-                                        gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
+                                                gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
                     gradInput.index_put_({n, torch::indexing::Slice(), torch::indexing::Slice(startDim1, endDim1),
                                           torch::indexing::Slice(startDim2, endDim2)},
-                                         errorTensor.index({n, outChannel, i, j}) * Conv2d::weights.index({outChannel}) +
-                                             gradInput.index({n, torch::indexing::Slice(),
-                                                              torch::indexing::Slice(startDim1, endDim1),
-                                                              torch::indexing::Slice(startDim2, endDim2)}));
+                                         gradInput.index({n, torch::indexing::Slice(),
+                                                          torch::indexing::Slice(startDim1, endDim1),
+                                                          torch::indexing::Slice(startDim2, endDim2)}) +
+                                             errorTensor.index({n, outChannel, i, j}) * Conv2d::weights.index({outChannel}));
                 }
             }
         }
@@ -210,6 +212,5 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
 
     optimizer->update(Conv2d::weights, Conv2d::gradWeight);
     // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
-
     return backwardOutput;
 }
