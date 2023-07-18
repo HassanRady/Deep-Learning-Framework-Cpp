@@ -41,5 +41,7 @@ void Model::eval()
 void Model::train()
 {
     for (auto it = Model::layers.begin(); it != layers.end(); it++)
+    {
         (*it)->train();
+    }
 }
