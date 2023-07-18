@@ -25,7 +25,6 @@ namespace DeepStorm
             torch::Tensor backward(torch::Tensor &errorTensor) override;
 
             Optimizer *optimizer;
-
         private:
             int inFeatures;
             int outFeatures;
