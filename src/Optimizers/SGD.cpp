@@ -7,9 +7,9 @@ Sgd::Sgd(double learningRate = 1e-3)
     Sgd::learningRate = learningRate;
 }
 
-void Sgd::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
+torch::Tensor Sgd::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
-    weightTensor = weightTensor - Sgd::learningRate * gradientTensor;
+    return weightTensor - Sgd::learningRate * gradientTensor;
 }
 
 SgdWithMomentum::SgdWithMomentum(double learningRate, double momentum)
@@ -18,8 +18,8 @@ SgdWithMomentum::SgdWithMomentum(double learningRate, double momentum)
     SgdWithMomentum::momentum = momentum;
 }
 
-void SgdWithMomentum::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
+torch::Tensor SgdWithMomentum::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
     v = SgdWithMomentum::momentum * v - SgdWithMomentum::learningRate * gradientTensor;
-    weightTensor = weightTensor + v;
+    return weightTensor + v;
 }

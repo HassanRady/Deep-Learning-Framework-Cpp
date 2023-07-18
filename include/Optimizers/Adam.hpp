@@ -14,7 +14,7 @@ namespace DeepStorm
         public:
             Adam(float learningRate, float mu, float rho, float epsilon);
 
-            void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
+            torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
 
             ~Adam() = default;
 

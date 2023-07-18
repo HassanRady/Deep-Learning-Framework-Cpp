@@ -14,7 +14,7 @@ namespace DeepStorm
         public:
             Sgd(double learningRate);
 
-            void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
+            torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
 
             ~Sgd() = default;
         };
@@ -25,7 +25,7 @@ namespace DeepStorm
         public:
             SgdWithMomentum(double learningRate, double momentum);
 
-            void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
+            torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) override;
 
             ~SgdWithMomentum() = 0;
 

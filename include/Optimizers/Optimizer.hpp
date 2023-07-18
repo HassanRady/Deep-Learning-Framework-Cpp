@@ -8,7 +8,7 @@ namespace DeepStorm
     class Optimizer
     {
     public:
-        virtual void update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) = 0;
+        virtual torch::Tensor update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor) = 0;
 
         virtual ~Optimizer() = default;
 

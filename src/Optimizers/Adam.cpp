@@ -10,7 +10,7 @@ Adam::Adam(float learningRate = 0.001, float mu = 0.9, float rho = 0.9, float ep
     Adam::epsilon = epsilon; 
 }
 
-void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
+torch::Tensor Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTensor)
 {
     Adam::k = Adam::k + 1;
 
@@ -20,5 +20,5 @@ void Adam::update(torch::Tensor &weightTensor, const torch::Tensor &gradientTens
     auto vHat = (Adam::v) / (1 - pow(Adam::mu, Adam::k));
     auto rHat = (Adam::r) / (1 - pow(Adam::rho, Adam::k));
 
-    weightTensor = weightTensor - Adam::learningRate * (vHat) / (pow(rHat, 0.5) + Adam::epsilon);
+    return weightTensor - Adam::learningRate * (vHat) / (pow(rHat, 0.5) + Adam::epsilon);
 }
