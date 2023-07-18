@@ -3,7 +3,7 @@
 using namespace DeepStorm;
 
 
-Trainer::Trainer(Model& model, DeepStorm::Loss* loss, int batchSize)
+Trainer::Trainer(Model* model, DeepStorm::Loss* loss, int batchSize)
 {
     Trainer::model = model;
     // Trainer::loss = std::make_unique<Loss>(loss);
@@ -14,11 +14,11 @@ Trainer::Trainer(Model& model, DeepStorm::Loss* loss, int batchSize)
 
 std::tuple<float, torch::Tensor> Trainer::trainBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = Trainer::model.forward(x);
+    torch::Tensor output = Trainer::model->forward(x);
     float loss = Trainer::loss->forward(output, y);
 
     y = Trainer::loss->backward(y);
-    Trainer::model.backward(y);
+    Trainer::model->backward(y);
 
     return {loss, output};
 }
@@ -26,7 +26,7 @@ std::tuple<float, torch::Tensor> Trainer::trainBatch(torch::Tensor &x, torch::Te
 
 std::tuple<float, torch::Tensor> Trainer::valBatch(torch::Tensor &x, torch::Tensor &y)
 {
-    torch::Tensor output = Trainer::model.forward(x);
+    torch::Tensor output = Trainer::model->forward(x);
     float loss = Trainer::loss->forward(output, y);
     return {loss, output};
 }
