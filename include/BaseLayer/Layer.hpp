@@ -25,6 +25,7 @@ namespace DeepStorm
         bool trainable;
         bool initializable;
         bool training;
+        std::string name;
         Optimizer *optimizer;
     };
 }
