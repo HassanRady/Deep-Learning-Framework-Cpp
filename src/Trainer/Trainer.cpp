@@ -3,9 +3,9 @@
 using namespace DeepStorm;
 
 
-Trainer::Trainer(Model* model, DeepStorm::Loss* loss, int batchSize)
+Trainer::Trainer(std::unique_ptr<Model> model, Loss* loss, int batchSize)
 {
-    Trainer::model = model;
+    Trainer::model = std::move(model);
     // Trainer::loss = std::make_unique<Loss>(loss);
     Trainer::loss = loss;
     Trainer::batchSize = batchSize;

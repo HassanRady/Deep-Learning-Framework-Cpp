@@ -14,7 +14,7 @@ namespace DeepStorm
     class Trainer
     {
     public:
-        Trainer(Model *model, DeepStorm::Loss *loss, int batchSize);
+        Trainer(std::unique_ptr<Model> model, DeepStorm::Loss *loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
@@ -119,7 +119,7 @@ namespace DeepStorm
         }
 
     private:
-        DeepStorm::Model* model;
+        std::unique_ptr<Model> model;
         DeepStorm::Loss *loss;
         int batchSize;
     };
