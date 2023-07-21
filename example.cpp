@@ -37,7 +37,7 @@ int main()
 {
     // torch::manual_seed(1);
 
-    auto batchSize = 32;
+    auto batchSize = 6;
     auto inChannels = 1;
     auto filterSize = 3;
     auto outChannels = 16;
@@ -47,27 +47,29 @@ int main()
 
     CrossEntropyLoss loss(1e-09);
 
-    Model *model = new Model();
+    // Model *model = new Model();
+    std::unique_ptr<Model> model = std::make_unique<Model>();
 
     model->append(new Conv2d(inChannels, outChannels, filterSize, stride, padding, new He(), new Constant(0.01), new Sgd(1e-3)));
-    model->append(new BatchNorm2d(outChannels, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
-    model->append(new Dropout(0.3));
+    // model->append(new BatchNorm2d(outChannels, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
+    // model->append(new Dropout(0.3));
     model->append(new ReLU());
-    model->append(new MaxPool2d(2, 2));
+    // model->append(new MaxPool2d(2, 2));
     model->append(new Conv2d(outChannels, outChannels, filterSize, stride, padding, new He(), new Constant(0.01), new Adam(0.001, 0.9, 0.9, 1e-07)));
-    model->append(new BatchNorm2d(outChannels, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
+    // model->append(new BatchNorm2d(outChannels, new Adam(0.001, 0.9, 0.9, 1e-07), 1e-11, 0.8));
     model->append(new ReLU());
-    model->append(new MaxPool2d(2, 2));
+    // model->append(new MaxPool2d(2, 2));
     model->append(new Flatten());
-    model->append(new Linear(outChannels * 7 * 7, 32, new He(), new Constant(0.01), new Sgd(1e-3)));
-    model->append(new ReLU());
+    model->append(new Linear(outChannels * 28 * 28, 32, new He(), new Constant(0.01), new Sgd(1e-3)));
+    // model->append(new ReLU());
     model->append(new Linear(32, classes, new He(), new Constant(0.01), new Adam(0.001, 0.9, 0.9, 1e-07)));
+    model->append(new ReLU());
     model->append(new SoftMax());
 
     auto trainset = ImgDataset("./data/trainset", 1, (unsigned)9);
     auto valset = ImgDataset("./data/trainset", 1, (unsigned)2);
 
-    trainset.resize(256);
+    trainset.resize(12);
     valset.resize(2);
 
     auto trainLoader = torch::data::make_data_loader(std::move(trainset.map(torch::data::transforms::Stack<>())),
@@ -76,9 +78,8 @@ int main()
     auto valLoader = torch::data::make_data_loader(std::move(valset.map(torch::data::transforms::Stack<>())),
                                                    torch::data::DataLoaderOptions().batch_size(batchSize).drop_last(true));
 
-    auto trainer = Trainer(model, &loss, batchSize);
+    auto trainer = Trainer(std::move(model), &loss, batchSize);
 
-    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 20);
+    auto [x, y] = trainer.fit<>(*trainLoader, *valLoader, 10);
 
-    delete model;
 }
