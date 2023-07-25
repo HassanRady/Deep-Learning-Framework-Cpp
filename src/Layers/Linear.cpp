@@ -45,9 +45,8 @@ torch::Tensor Linear::backward(torch::Tensor &errorTensor)
 {
     Linear::gradientWeights = torch::matmul(Linear::inputTensor.transpose(1, 0), errorTensor);
     // Linear::gradientBias =  errorTensor.sum(-1, false);
-    optimizer->update(Linear::weights, Linear::gradientWeights);
+    Linear::weights = optimizer->update(Linear::weights, Linear::gradientWeights);
     // optimizer->update(Linear::bias, Linear::gradientBias);
-
     // return torch::matmul(errorTensor, Linear::weights.transpose(1, 0)).index({torch::indexing::Slice(), torch::indexing::Slice(0, Linear::inFeatures)});
     return torch::matmul(errorTensor, Linear::weights.transpose(1, 0));
 }
