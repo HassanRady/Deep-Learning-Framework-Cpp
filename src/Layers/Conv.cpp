@@ -172,10 +172,10 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
     int outputSizeDim1 = Conv2d::forwardOutputShape[2];
     int outputSizeDim2 = Conv2d::forwardOutputShape[3];
 
-    torch::Tensor backwardOutput = torch::empty_like(inputTensor);
-    torch::Tensor gradInput = torch::empty_like(inputTensorPadded);
-    Conv2d::gradWeight = torch::empty_like(weights);
-    Conv2d::gradBias = torch::empty({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA);
+    torch::Tensor backwardOutput = torch::zeros_like(inputTensor);
+    torch::Tensor gradInput = torch::zeros_like(inputTensorPadded);
+    Conv2d::gradWeight = torch::zeros_like(Conv2d::weights);
+    Conv2d::gradBias = torch::zeros({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA);
 
     for (int n = 0; n < Conv2d::batchSize; ++n)
     {
@@ -194,7 +194,7 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
                                                                 torch::indexing::Slice(startDim2, endDim2)})
                                               .to(torch::kCUDA);
 
-                    Conv2d::gradWeight.index_put_({outChannel}, Conv2d::gradWeight.index({outChannel}) +
+                    Conv2d::gradWeight.index_put_({outChannel, torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice()}, Conv2d::gradWeight.index({outChannel}) +
                                                                     slice * errorTensor.index({n, outChannel, i, j}));
                     Conv2d::gradBias.index_put_({outChannel},
                                                 gradBias.index({outChannel}) + errorTensor.index({n, outChannel, i, j}));
@@ -209,8 +209,8 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
         }
         backwardOutput.index_put_({n}, Conv2d::removePad(gradInput.index({n})));
     }
-
-    optimizer->update(Conv2d::weights, Conv2d::gradWeight);
+    Conv2d::weights = optimizer->update(Conv2d::weights, Conv2d::gradWeight);
     // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
+    std::cout << "Conv2d: " << Conv2d::weights.sum() << std::endl;
     return backwardOutput;
 }
