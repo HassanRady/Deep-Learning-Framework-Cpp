@@ -74,8 +74,8 @@ torch::Tensor BatchNorm2d::backward(torch::Tensor &errorTensor)
                  (BatchNorm2d::batchSize * gradientInputNormalized - gradientInputNormalized.sum({0}) -
              BatchNorm2d::inputTensorNormalized * torch::sum(gradientInputNormalized * BatchNorm2d::inputTensorNormalized, {0}));
 
-    BatchNorm2d::optimizer->update(BatchNorm2d::weight, gradientWeight);
-    BatchNorm2d::optimizer->update(BatchNorm2d::bias, gradientBias);
+    BatchNorm2d::weight = BatchNorm2d::optimizer->update(BatchNorm2d::weight, gradientWeight);
+    BatchNorm2d::bias = BatchNorm2d::optimizer->update(BatchNorm2d::bias, gradientBias);
 
     return gradientInputTensor;
 }
