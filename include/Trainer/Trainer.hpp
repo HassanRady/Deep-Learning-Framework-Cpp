@@ -4,7 +4,6 @@
 #include "iostream"
 #include "memory"
 
-// #include "Dataset.hpp"
 #include "Layer.hpp"
 #include "Loss.hpp"
 #include "Model.hpp"
@@ -14,20 +13,11 @@ namespace DeepStorm
     class Trainer
     {
     public:
-        Trainer(std::shared_ptr<Model> model, std::shared_ptr<Loss> loss, int batchSize);
+        Trainer(std::shared_ptr<Model> model, std::shared_ptr<Loss> loss, int batchSize, float scale = 255.0);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
         std::tuple<float, torch::Tensor> valBatch(torch::Tensor &x, torch::Tensor &y);
-
-        // template<typename DataLoader>
-        // std::tuple<float, std::vector<torch::Tensor>> trainEpoch(DataLoader& loader);
-
-        // template<typename DataLoader>
-        // std::tuple<float, std::vector<torch::Tensor>> valEpoch(DataLoader& loader);
-
-        // template<typename DataLoader>
-        // std::tuple<std::vector<float>, std::vector<float>> fit(DataLoader& trainLoader, DataLoader& valLoader, int epochs);
 
         template <typename DataLoader>
         std::tuple<float, std::vector<torch::Tensor>> trainEpoch(DataLoader &loader)
@@ -43,7 +33,7 @@ namespace DeepStorm
             {
                 x = batch.data;
                 x = x.reshape({batchSize, 28*28});
-                x = x.to(torch::kCUDA).to(torch::kFloat);
+                x = x.to(torch::kCUDA).to(torch::kFloat)/scale;
 
                 y = batch.target.to(torch::kCUDA);
                 size += y.sizes()[0];
@@ -72,10 +62,11 @@ namespace DeepStorm
             torch::Tensor x, y;
             for (auto &batch : loader)
             {
-                size += y.sizes()[0];
-
-                x = batch.data.to(torch::kCUDA);
+                x = x.reshape({batchSize, 28*28});
+                x = batch.data.to(torch::kCUDA).to(torch::kFloat)/scale;
+                
                 y = batch.target.to(torch::kCUDA);
+                size += y.sizes()[0];
 
                 auto [batchLoss, preds] = valBatch(x, y);
 
@@ -108,10 +99,10 @@ namespace DeepStorm
 
                 trainLosses.push_back(trainLoss);
                 // valLosses.push_back(valLoss);
-                //            trainPreds.insert(trainPreds);
-                //            valPreds.insert(valPreds);
+                // trainPreds.insert(trainPreds);
+                // valPreds.insert(valPreds);
 
-                // TODO metrics
+                // TODO: metrics
 
                 std::cout;
             }
@@ -123,5 +114,6 @@ namespace DeepStorm
         std::shared_ptr<Model> model;
         std::shared_ptr<Loss> loss;
         int batchSize;
+        float scale;
     };
 } // namespace DeepStorm

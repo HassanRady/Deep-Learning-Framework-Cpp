@@ -3,11 +3,12 @@
 using namespace DeepStorm;
 
 
-Trainer::Trainer(std::shared_ptr<Model> model,std::shared_ptr<Loss> loss, int batchSize)
+Trainer::Trainer(std::shared_ptr<Model> model,std::shared_ptr<Loss> loss, int batchSize, float scale)
 {
     Trainer::model = model;
     Trainer::loss = loss;
     Trainer::batchSize = batchSize;
+    Trainer::scale = scale;
 }
 
 
