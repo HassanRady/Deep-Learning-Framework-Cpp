@@ -7,5 +7,5 @@ He::He() {}
 void He::initialize(torch::Tensor &tensor, int fanIn, int fanOut)
 {
     auto sigma = std::sqrt((2.0) / (fanIn));
-    torch::nn::init::normal_(tensor, 0, sigma);
+    torch::nn::init::normal_(tensor, 0, sigma).to(torch::kFloat);
 }

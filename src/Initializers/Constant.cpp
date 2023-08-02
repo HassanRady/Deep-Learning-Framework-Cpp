@@ -8,5 +8,5 @@ Constant::Constant(float scalar = 0.1) {
 
 void Constant::initialize(torch::Tensor &tensor, int fanIn, int fanOut)
 {
-    tensor.fill_(Constant::scalar);
+    tensor.fill_(Constant::scalar).to(torch::kFloat);
 }
