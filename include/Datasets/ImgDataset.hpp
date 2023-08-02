@@ -19,7 +19,7 @@ namespace DeepStorm
                 std::string x, y;
             };
 
-            ImgDataset(std::string path, int channels, float scale, unsigned seed);
+            ImgDataset(std::string path, int channels, unsigned seed);
 
             torch::data::Example<> get(size_t index) override;
 
@@ -46,7 +46,6 @@ namespace DeepStorm
 
             std::vector<torch::Tensor> xs, ys;
             std::vector<std::string> classes;
-            float scale;
         };
     } // namespace Datasets
 
