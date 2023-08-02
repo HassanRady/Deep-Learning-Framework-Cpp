@@ -20,7 +20,7 @@ namespace DeepStorm
             ~CrossEntropyLoss() = default;
 
         private:
-            torch::Tensor y;
+            torch::Tensor predictions;
             float epsilon;
         };
     } // namespace Losses
