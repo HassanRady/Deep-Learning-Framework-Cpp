@@ -2,7 +2,7 @@
 
 using namespace DeepStorm::Datasets;
 
-ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
+ImgDataset::ImgDataset(std::string path, int channels = 3, float scale = 255.0, unsigned seed = 42)
 {
     auto [classes, examples] = ImgDataset::readDatasetDir(path);
     ImgDataset::classes = classes;
@@ -11,6 +11,8 @@ ImgDataset::ImgDataset(std::string path, int channels = 3, unsigned seed = 42)
 
     ImgDataset::xs = ImgDataset::process_images(imgsPath, channels);
     ImgDataset::ys = ImgDataset::process_labels(imgsLabel);
+
+    ImgDataset::scale = scale;
 };
 
 std::vector<std::string> ImgDataset::readImgDir(std::string path)
@@ -43,7 +45,7 @@ torch::Tensor ImgDataset::readData(std::string loc, int channels)
 {
     cv::Mat img = cv::imread(loc);
     torch::Tensor img_tensor = torch::from_blob(img.data, {img.rows, img.cols, channels}, torch::kByte);
-    img_tensor = img_tensor.permute({2, 0, 1});
+    img_tensor = img_tensor.permute({2, 0, 1})/ImgDataset::scale;
 
     return img_tensor.clone();
 }
