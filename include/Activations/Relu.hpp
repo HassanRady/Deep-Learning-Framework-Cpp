@@ -19,7 +19,7 @@ namespace DeepStorm
             torch::Tensor backward(torch::Tensor &y) override;
 
         private:
-            torch::Tensor pos;
+            torch::Tensor positive;
         };
 
     } // namespace Activation
