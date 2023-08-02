@@ -62,8 +62,9 @@ namespace DeepStorm
             torch::Tensor x, y;
             for (auto &batch : loader)
             {
+                x = batch.data;
                 x = x.reshape({batchSize, 28*28});
-                x = batch.data.to(torch::kCUDA).to(torch::kFloat)/scale;
+                x = x.to(torch::kCUDA).to(torch::kFloat)/scale;
                 
                 y = batch.target.to(torch::kCUDA);
                 size += y.sizes()[0];
@@ -95,10 +96,10 @@ namespace DeepStorm
 
                 auto [trainLoss, trainPred] = trainEpoch(trainLoader);
 
-                // auto [valLoss, valPred] = valEpoch(valLoader);
+                auto [valLoss, valPred] = valEpoch(valLoader);
 
                 trainLosses.push_back(trainLoss);
-                // valLosses.push_back(valLoss);
+                valLosses.push_back(valLoss);
                 // trainPreds.insert(trainPreds);
                 // valPreds.insert(valPreds);
 
