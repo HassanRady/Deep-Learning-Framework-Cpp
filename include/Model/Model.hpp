@@ -27,6 +27,8 @@ namespace DeepStorm
 
         void train();
 
+        ~Model();
+
     private:
         std::vector<Layer *> layers;
         std::vector<Layer *>::iterator iter;
