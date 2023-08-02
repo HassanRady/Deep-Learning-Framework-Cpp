@@ -175,7 +175,7 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
     torch::Tensor backwardOutput = torch::zeros_like(inputTensor);
     torch::Tensor gradInput = torch::zeros_like(inputTensorPadded);
     Conv2d::gradWeight = torch::zeros_like(Conv2d::weights);
-    Conv2d::gradBias = torch::zeros({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA);
+    Conv2d::gradBias = torch::zeros({Conv2d::outChannels, 1, 1, 1}, torch::kCUDA).to(torch::kFloat);
 
     for (int n = 0; n < Conv2d::batchSize; ++n)
     {
@@ -211,6 +211,5 @@ torch::Tensor Conv2d::backward(torch::Tensor &errorTensor)
     }
     Conv2d::weights = optimizer->update(Conv2d::weights, Conv2d::gradWeight);
     // Common mistake: pruning the bias usually harms model accuracy too much. (https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide#:~:text=Common%20mistake%3A%20pruning%20the%20bias%20usually%20harms%20model%20accuracy%20too%20much.)
-    std::cout << "Conv2d: " << Conv2d::weights.sum() << std::endl;
     return backwardOutput;
 }
