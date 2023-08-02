@@ -7,6 +7,8 @@ SoftMax::SoftMax()
 {
     SoftMax::trainable = false;
     SoftMax::initializable = false;
+    SoftMax::training = false;
+    SoftMax::name = "SoftMax";
 }
 
 torch::Tensor SoftMax::forward(torch::Tensor &x) 
@@ -18,28 +20,8 @@ torch::Tensor SoftMax::forward(torch::Tensor &x)
     return SoftMax::softmaxOutput;
 }
 
-torch::Tensor SoftMax::backward(torch::Tensor &y) 
-{
-    const auto batch_size = SoftMax::softmaxOutput.size(0);
-    const auto num_classes = SoftMax::softmaxOutput.size(1);
-    auto jacobian = torch::zeros({batch_size, num_classes, num_classes}, torch::kCUDA);
-    for (int i = 0; i < batch_size; ++i)
-    {
-        for (int j = 0; j < num_classes; ++j)
-        {
-            for (int k = 0; k < num_classes; ++k)
-            {
-                if (j == k)
-                {
-                    jacobian[i][j][k] = SoftMax::softmaxOutput[i][j] * (1 - SoftMax::softmaxOutput[i][j]);
-                }
-                else
-                {
-                    jacobian[i][j][k] = -SoftMax::softmaxOutput[i][j] * SoftMax::softmaxOutput[i][k];
-                }
-            }
-        }
-    }
-    auto out = torch::matmul(jacobian, y.unsqueeze(-1)).squeeze();
-    return out;
+torch::Tensor SoftMax::backward(torch::Tensor &y) {
+    auto softExpand = SoftMax::softmaxOutput.unsqueeze(-1).expand({y.sizes()[0], y.sizes()[1], y.sizes()[1]});
+    auto jacobian = softExpand * (torch::eye(y.sizes()[1], torch::kCUDA) - softExpand.transpose(1, 2));
+    return torch::matmul(jacobian, y.unsqueeze(-1)).squeeze();
 }
