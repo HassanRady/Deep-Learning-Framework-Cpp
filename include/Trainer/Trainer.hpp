@@ -14,7 +14,7 @@ namespace DeepStorm
     class Trainer
     {
     public:
-        Trainer(std::unique_ptr<Model> model, DeepStorm::Loss *loss, int batchSize);
+        Trainer(std::shared_ptr<Model> model, std::shared_ptr<Loss> loss, int batchSize);
 
         std::tuple<float, torch::Tensor> trainBatch(torch::Tensor &x, torch::Tensor &y);
 
@@ -41,10 +41,12 @@ namespace DeepStorm
             torch::Tensor x, y;
             for (auto &batch : loader)
             {
-                size += y.sizes()[0];
+                x = batch.data;
+                x = x.reshape({batchSize, 28*28});
+                x = x.to(torch::kCUDA).to(torch::kFloat);
 
-                x = batch.data.to(torch::kCUDA);
                 y = batch.target.to(torch::kCUDA);
+                size += y.sizes()[0];
 
                 auto [batchLoss, preds] = trainBatch(x, y);
 
@@ -55,7 +57,6 @@ namespace DeepStorm
             float epochLoss = runningLoss / size;
 
             std::cout << "Train loss: " << epochLoss << "\n";
-
             return {epochLoss, runningPreds};
         }
 
@@ -119,8 +120,8 @@ namespace DeepStorm
         }
 
     private:
-        std::unique_ptr<Model> model;
-        DeepStorm::Loss *loss;
+        std::shared_ptr<Model> model;
+        std::shared_ptr<Loss> loss;
         int batchSize;
     };
 } // namespace DeepStorm

@@ -6,7 +6,6 @@ using namespace DeepStorm;
 Trainer::Trainer(std::shared_ptr<Model> model,std::shared_ptr<Loss> loss, int batchSize)
 {
     Trainer::model = model;
-    // Trainer::loss = std::make_unique<Loss>(loss);
     Trainer::loss = loss;
     Trainer::batchSize = batchSize;
 }
