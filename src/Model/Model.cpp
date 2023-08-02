@@ -45,3 +45,11 @@ void Model::train()
         (*it)->train();
     }
 }
+
+Model::~Model()
+{
+    for (auto it = Model::layers.begin(); it != layers.end(); it++)
+    {
+        delete (*it);
+    }
+}
